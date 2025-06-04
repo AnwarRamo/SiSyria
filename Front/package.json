@@ -34,7 +34,7 @@
     "react-leaflet": "^4.2.1",
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.6.2",
-    "react-scripts": "5.0.1",
+    "react-scripts": "^5.0.1",
     "react-toastify": "^11.0.5",
     "web-vitals": "^5.0.2",
     "zustand": "^5.0.5"
@@ -50,9 +50,12 @@
       "react-app",
       "react-app/jest"
     ],
-    "overrides": [ 
+    "overrides": [
       {
-        "files": ["**/*.ts", "**/*.tsx"],
+        "files": [
+          "**/*.ts",
+          "**/*.tsx"
+        ],
         "parser": "@typescript-eslint/parser",
         "parserOptions": {
           "ecmaVersion": 2018,
@@ -62,7 +65,9 @@
           },
           "warnOnUnsupportedTypeScriptVersion": true
         },
-        "plugins": ["@typescript-eslint"],
+        "plugins": [
+          "@typescript-eslint"
+        ],
         "rules": {
           "default-case": "off",
           "no-dupe-class-members": "off",
@@ -97,7 +102,8 @@
     ]
   },
   "devDependencies": {
-    "eslint": "^9.28.0",
+    "eslint": "^8.56.0",
+    "eslint-config-react-app": "^7.0.1",
     "eslint-plugin-react": "^7.37.5"
   }
 }
