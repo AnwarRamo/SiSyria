@@ -6,6 +6,7 @@ import { BrowserRouter } from 'react-router-dom';
 import "./index.css";
 
 import { CartProvider } from './context/CartContext'; // adjust path as needed
+import { disableReactDevTools } from '@fvilers/disable-react-devtools';
 
 import {
   Chart as ChartJS,
@@ -28,6 +29,9 @@ ChartJS.register(
   Legend
 );
 
+if (process.env.NODE_ENV === 'production') {
+  disableReactDevTools();
+}
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
