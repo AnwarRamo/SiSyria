@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { addToCart, removeFromCart, updateCartQuantity, checkoutCart } from '../services/cartService';
+import { addToCart, removeFromCart, updateCartQuantity} from '../services/cartService';
 
 export const useCartStore = create((set, get) => ({
   items: [],
