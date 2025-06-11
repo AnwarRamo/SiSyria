@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useAuthStore } from '../stores/auth.store';
 
 const apiClient = axios.create({
-  baseURL: process.env.VITE_API_URL || 'http://localhost:5000/users',
+  baseURL: 'https://sisyriaback-production.up.railway.app/api/users',
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
