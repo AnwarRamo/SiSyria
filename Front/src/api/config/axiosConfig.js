@@ -3,13 +3,13 @@ import axios from 'axios';
 import { useAuthStore } from '../stores/auth.store';
 
 const apiClient = axios.create({
-  baseURL: 'https://sisyriaback-production.up.railway.app/api/users',
+  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8080/api/users',
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
 });
-console.log('[axiosConfig] VITE_API_URL:', process.env.VITE_API_URL);
+console.log('ENV TEST:', process.env.REACT_APP_API_URL);
 
 apiClient.interceptors.response.use(
   (response) => {
