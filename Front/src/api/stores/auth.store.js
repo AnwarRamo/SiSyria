@@ -1,9 +1,10 @@
+// src/stores/auth.store.js
 import { create } from 'zustand';
 import { AuthService } from '../services/auth.service';
 
 export const useAuthStore = create((set, get) => ({
   user: null,
-  loading: true,
+  loading: true, // Start with loading: true to indicate initial hydration is pending
   error: null,
 
   login: async (credentials) => {
@@ -25,17 +26,25 @@ export const useAuthStore = create((set, get) => ({
       return formattedUser;
     } catch (error) {
       console.error('Login error:', error);
-      set({ error, loading: false, user: null });
-      throw error;
+      const errorMessage = error.response?.data?.message || 'Login failed';
+      set({ error: errorMessage, loading: false, user: null });
+      throw new Error(errorMessage);
     }
   },
 
   hydrate: async () => {
-    if (get().user || !get().loading) {
-      if (!get().user) set({ loading: true });
-      else return;
+    // Prevent re-hydration if a user is already loaded
+    if (get().user) {
+        set({ loading: false });
+        return;
     }
 
+    // Ensure we don't have a tokenless hydration attempt causing flashes
+    if (!localStorage.getItem('accessToken')) {
+        set({ user: null, loading: false, error: null });
+        return;
+    }
+    
     try {
       const userData = await AuthService.getCurrentUser();
       const user = userData?.user;
@@ -50,18 +59,14 @@ export const useAuthStore = create((set, get) => ({
           createdAt: user.createdAt,
           avatar: user.avatar,
         };
-
         set({ user: formattedUser, loading: false, error: null });
       } else {
         set({ user: null, loading: false, error: null });
       }
     } catch (error) {
       console.error('Hydration error:', error);
-      set({
-        user: null,
-        loading: false,
-        error: { code: 'HYDRATE_ERROR', message: 'Failed to check session' },
-      });
+      // This catch is critical for new users or expired sessions
+      set({ user: null, loading: false, error: null });
     }
   },
 
@@ -70,23 +75,25 @@ export const useAuthStore = create((set, get) => ({
     try {
       await AuthService.logout();
       set({ user: null, loading: false });
+      // In a real app, you would use React Router's navigate function here
+      // For this example, we'll use window.location
       window.location.href = '/login';
     } catch (error) {
       console.error('Logout failed:', error);
       set({
-        user: null,
-        error: { code: 'LOGOUT_ERROR', message: error.message || 'Logout failed' },
+        user: null, // Still log the user out on the frontend
+        error: { code: 'LOGOUT_ERROR', message: 'Logout failed on server' },
         loading: false,
       });
     }
   },
+  
   savedTrips: [],
-addTripToProfile: (trip) => {
-  const currentTrips = get().savedTrips || [];
-  // Prevent duplicates
-  if (currentTrips.some(t => t.id === trip.id)) return;
-  set({ savedTrips: [...currentTrips, trip] });
-},
+  addTripToProfile: (trip) => {
+    const currentTrips = get().savedTrips || [];
+    if (currentTrips.some(t => t.id === trip.id)) return;
+    set({ savedTrips: [...currentTrips, trip] });
+  },
 
   isAdmin: () => get().user?.role === 'admin',
 }));
