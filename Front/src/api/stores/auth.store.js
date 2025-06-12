@@ -54,29 +54,35 @@ export const useAuthStore = create((set, get) => ({
       throw new Error(errorMessage);
     }
   },
+hydrate: async () => {
+  if (get().user) {
+    set({ loading: false });
+    return;
+  }
 
-  hydrate: async () => {
-    if (get().user) {
-      set({ loading: false });
-      return;
-    }
-    if (!localStorage.getItem('accessToken')) {
-      set({ user: null, loading: false, error: null });
-      return;
-    }
-    try {
-      const { user: userData } = await AuthService.getCurrentUser();
-      if (userData?._id) {
-        const formattedUser = { /* ...user formatting... */ };
-        set({ user: formattedUser, loading: false, error: null });
-      } else {
-        set({ user: null, loading: false, error: null });
-      }
-    } catch (error) {
-      console.error('Hydration error:', error);
+  try {
+    const { user: userData } = await AuthService.getCurrentUser(); // Server checks cookies
+    if (userData?._id) {
+      const formattedUser = {
+        id: userData._id,
+        username: userData.username,
+        displayName: userData.displayName || userData.username,
+        email: userData.email,
+        role: userData.role,
+        createdAt: userData.createdAt,
+        avatar: userData.avatar,
+      };
+      set({ user: formattedUser, loading: false, error: null });
+    } else {
       set({ user: null, loading: false, error: null });
     }
-  },
+  } catch (error) {
+    console.error('Hydration error:', error);
+    set({ user: null, loading: false, error: null });
+  }
+},
+
+
 
   logout: async () => {
     try {
