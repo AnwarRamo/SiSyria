@@ -8,7 +8,12 @@ import Footer from "../layout/Footer";
 
 export const Register = () => {
   const navigate = useNavigate();
-  const { register, loading, error } = useAuthStore();
+
+  // ✅ Use selectors to properly access Zustand store functions and state
+  const register = useAuthStore((state) => state.register);
+  const loading = useAuthStore((state) => state.loading);
+  const error = useAuthStore((state) => state.error);
+
   const [formData, setFormData] = useState({
     username: "",
     email: "",

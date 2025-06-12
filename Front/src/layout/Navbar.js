@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuthStore } from "../api/stores/auth.store";
-import { useCartStore } from "../api/stores/cart.store"; 
+import { useCartStore } from "../api/stores/cart.store";
 import { FaUserCircle, FaCaretDown, FaShoppingCart } from "react-icons/fa";
 import { toast } from "react-toastify";
 import logo from "../assets/images/logo.jpg";
@@ -67,6 +67,7 @@ const Navbar = () => {
               <button
                 onClick={() => setIsCartOpen(true)} // Open cart modal on click
                 className="relative text-gray-700 hover:text-[#115d5a]"
+                aria-label="Open cart"
               >
                 <FaShoppingCart className="h-6 w-6" />
                 {hasCartItems && (
@@ -77,7 +78,7 @@ const Navbar = () => {
               </button>
             </div>
 
-            {/* User */}
+            {/* User Desktop */}
             <div className="hidden md:block">
               {user ? (
                 <div className="relative">
@@ -95,7 +96,7 @@ const Navbar = () => {
                   </button>
 
                   {isUserDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1">
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
                       <Link to="/profile" className="block px-4 py-2 text-sm hover:bg-gray-100">
                         Profile
                       </Link>
@@ -128,11 +129,15 @@ const Navbar = () => {
               )}
             </div>
 
-            {/* Mobile menu */}
+            {/* Mobile menu button */}
             <div className="md:hidden">
-              <button onClick={toggleMenu}>
+              <button
+                onClick={toggleMenu}
+                aria-label="Toggle menu"
+                className="text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#115d5a]"
+              >
                 <svg
-                  className="h-6 w-6 text-gray-700"
+                  className="h-6 w-6"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -159,36 +164,62 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile links */}
+      {/* Mobile Menu */}
       {isMenuOpen && (
-        <div className="md:hidden px-4 pb-4 pt-2 bg-white shadow">
+        <div className="md:hidden px-4 pb-4 pt-2 bg-white shadow border-t border-gray-200 z-40">
           {navLinks.map((link) => (
             <Link
               key={link.path}
               to={link.path}
               className="block py-2 text-sm text-gray-700 hover:text-[#115d5a]"
-              onClick={toggleMenu}
+              onClick={() => setIsMenuOpen(false)}
             >
               {link.label}
             </Link>
           ))}
-          {user && (
+
+          {/* Show Login/Register if no user */}
+          {!user ? (
+            <div className="flex flex-col space-y-2 mt-2">
+              <Link
+                to="/login"
+                className="text-[#115d5a] hover:underline text-sm"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Login
+              </Link>
+              <Link
+                to="/register"
+                className="bg-[#115d5a] text-white px-3 py-1 rounded-md text-sm hover:bg-[#0d4a47] text-center"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Sign Up
+              </Link>
+            </div>
+          ) : (
             <>
-              <Link to="/profile" className="block py-2 text-sm text-gray-700" onClick={toggleMenu}>
+              <Link
+                to="/profile"
+                className="block py-2 text-sm text-gray-700 hover:text-[#115d5a]"
+                onClick={() => setIsMenuOpen(false)}
+              >
                 Profile
               </Link>
               {user.role === "admin" && (
                 <Link
                   to="/admin/dashboard"
-                  className="block py-2 text-sm text-gray-700"
-                  onClick={toggleMenu}
+                  className="block py-2 text-sm text-gray-700 hover:text-[#115d5a]"
+                  onClick={() => setIsMenuOpen(false)}
                 >
                   Dashboard
                 </Link>
               )}
               <button
-                onClick={handleLogout}
-                className="w-full text-left py-2 text-sm text-red-600"
+                onClick={() => {
+                  handleLogout();
+                  setIsMenuOpen(false);
+                }}
+                className="w-full text-left py-2 text-sm text-red-600 hover:bg-gray-100"
               >
                 Logout
               </button>
@@ -197,7 +228,7 @@ const Navbar = () => {
         </div>
       )}
 
-      {/* Conditionally render the CartModal */}
+      {/* Cart Modal */}
       {isCartOpen && <CartModal onClose={() => setIsCartOpen(false)} />}
     </nav>
   );

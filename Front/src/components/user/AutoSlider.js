@@ -32,31 +32,28 @@ const images = [
   },
 ];
 
-
-
 const ImageCard = ({ image, isActive, onClick, index, activeIndex, totalImages }) => {
   const [isHovered, setIsHovered] = useState(false);
 
-  // حساب موضع الصورة بناء على الفهرس النشط
+  // Calculate the horizontal position of the image based on the active index
   const position = (index - activeIndex + totalImages) % totalImages;
-  const translateX = position * 100; // تحريك الصورة بشكل أفقي
-
-    // إذا كانت الصورة نشطة، لا تعرضها
-    //if (isActive) return null;
+  const translateX = position * 100;
 
   return (
     <div
       onClick={onClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className={` -mt-36 absolute w-48 h-72 cursor-pointer border-2 rounded-xl transition-all duration-500 ease-in-out ${
+      className={`-mt-36 absolute w-48 h-72 cursor-pointer border-2 rounded-xl transition-all duration-500 ease-in-out ${
         isActive
           ? "border-[#E7C873] scale-200 z-20 shadow-black"
           : "border-transparent scale-90 z-10 shadow-lg"
       } hover:scale-110`}
       style={{
         transform: `translateX(${translateX}%)`,
-        boxShadow: isHovered ? "0 10px 20px rgba(0, 0, 0, 0.3)" : "0 4px 8px rgba(0, 0, 0, 0.2)",
+        boxShadow: isHovered
+          ? "0 10px 20px rgba(0, 0, 0, 0.3)"
+          : "0 4px 8px rgba(0, 0, 0, 0.2)",
       }}
     >
       <img
@@ -116,6 +113,7 @@ const AutoSlider = () => {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Preload images before rendering slider
   useEffect(() => {
     const loadImages = async () => {
       const imagePromises = images.map((img) => {
@@ -131,6 +129,7 @@ const AutoSlider = () => {
     loadImages();
   }, []);
 
+  // Automatic slide change every 5 seconds with transition
   useEffect(() => {
     const interval = setInterval(() => {
       setIsTransitioning(true);
@@ -142,7 +141,7 @@ const AutoSlider = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Keyboard Navigation
+  // Keyboard navigation for left and right arrows
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === "ArrowLeft") {
@@ -166,7 +165,7 @@ const AutoSlider = () => {
   return (
     <div className="flex flex-col min-h-screen overflow-hidden mt-20">
       <div className="flex-grow relative w-full h-screen">
-        {/* Background Image with Animation */}
+        {/* Background Images with Fade */}
         <div className="absolute inset-0 w-full h-full">
           {images.map((image, index) => (
             <img
@@ -181,7 +180,7 @@ const AutoSlider = () => {
           <div className="absolute inset-0 w-full h-full bg-gradient-to-t from-black/70 to-transparent"></div>
         </div>
 
-        {/* Content with Smooth Transition */}
+        {/* Text Content */}
         <div
           className={`absolute top-1/3 left-4 lg:left-32 transform -translate-y-1/2 text-white max-w-md px-4 transition-all duration-500 ${
             isTransitioning ? "opacity-0 translate-y-8" : "opacity-100 translate-y-0"

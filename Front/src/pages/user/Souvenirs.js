@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FaHeart,
@@ -25,11 +25,16 @@ const sortOptions = [
   { label: "Oldest first", value: "date-asc" },
 ];
 
-// Product Card Component (Reusable for Trending and Main Display)
-const ProductCard = ({ souvenir, likedCards, toggleLike, handleAddToCart, handleDecreaseQuantity, updateQty, cartItems, layoutMode }) => {
-  const inCart = cartItems.find((i) => i.product._id === souvenir._id);
-  const qty = inCart?.quantity || 0;
-
+// Optimized Product Card with React.memo
+const ProductCard = React.memo(({ 
+  souvenir, 
+  isLiked, 
+  toggleLike, 
+  handleAddToCart, 
+  handleDecreaseQuantity, 
+  quantity = 0,
+  layoutMode 
+}) => {
   return (
     <div
       className={`bg-white p-4 relative rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300 border-2 border-transparent hover:border-[#115d5a] flex flex-col ${
@@ -40,8 +45,8 @@ const ProductCard = ({ souvenir, likedCards, toggleLike, handleAddToCart, handle
       <div className="absolute top-3 right-3 cursor-pointer z-10" onClick={() => toggleLike(souvenir._id)}>
         <FaHeart
           size={22}
-          className={`transition-colors duration-300 ${likedCards[souvenir._id] ? "text-[#115d5a]" : "text-gray-400"} hover:text-[#0d4442]`}
-        />
+          className={`transition-colors duration-300 ${isLiked ? "text-[#115d5a]" : "text-gray-400"} hover:text-[#0d4442]`}
+        /> 
       </div>
 
       {/* Image */}
@@ -67,18 +72,18 @@ const ProductCard = ({ souvenir, likedCards, toggleLike, handleAddToCart, handle
 
         {/* Button Section */}
         <div className="mt-auto pt-4">
-          {inCart ? (
+          {quantity > 0 ? (
             <div className="flex items-center justify-end space-x-2">
               <button
-                onClick={() => handleDecreaseQuantity(souvenir._id, qty)}
+                onClick={() => handleDecreaseQuantity(souvenir._id, quantity)}
                 className="bg-[#115d5a]/10 text-[#115d5a] rounded-full w-8 h-8 flex justify-center items-center hover:bg-[#115d5a] hover:text-white transition-colors"
                 aria-label={`Decrease quantity of ${souvenir.name}`}
               >
                 <FaMinus size={12} />
               </button>
-              <span className="text-lg font-medium">{qty}</span>
+              <span className="text-lg font-medium">{quantity}</span>
               <button
-                onClick={() => updateQty(souvenir._id, qty + 1)}
+                onClick={() => handleAddToCart(souvenir)}
                 className="bg-[#115d5a]/10 text-[#115d5a] rounded-full w-8 h-8 flex justify-center items-center hover:bg-[#115d5a] hover:text-white transition-colors"
                 aria-label={`Increase quantity of ${souvenir.name}`}
               >
@@ -99,21 +104,25 @@ const ProductCard = ({ souvenir, likedCards, toggleLike, handleAddToCart, handle
       </div>
     </div>
   );
-};
+});
 
-// Trending Card Component (Slightly different styling for trending section)
-const TrendingCard = ({ souvenir, likedCards, toggleLike, handleAddToCart, handleDecreaseQuantity, updateQty, cartItems }) => {
-  const inCart = cartItems.find((i) => i.product._id === souvenir._id);
-  const qty = inCart?.quantity || 0;
-
+// Optimized Trending Card
+const TrendingCard = React.memo(({ 
+  souvenir, 
+  isLiked, 
+  toggleLike, 
+  handleAddToCart, 
+  handleDecreaseQuantity, 
+  quantity = 0 
+}) => {
   return (
     <div className="w-80 flex-shrink-0 rounded-lg bg-white p-6 shadow-lg hover:shadow-2xl transition-shadow duration-300 border-2 border-transparent hover:border-[#115d5a] relative flex flex-col">
       {/* Like Button */}
       <div className="absolute top-4 right-4 cursor-pointer z-10" onClick={() => toggleLike(souvenir._id)}>
         <FaHeart
           size={24}
-          className={`transition-colors duration-300 ${likedCards[souvenir._id] ? "text-[#115d5a]" : "text-gray-400"} hover:text-[#0d4442]`}
-        />
+          className={`transition-colors duration-300 ${isLiked ? "text-[#115d5a]" : "text-gray-400"} hover:text-[#0d4442]`}
+        /> 
       </div>
 
       {/* Image */}
@@ -130,18 +139,18 @@ const TrendingCard = ({ souvenir, likedCards, toggleLike, handleAddToCart, handl
 
       {/* Button Section */}
       <div className="mt-auto pt-4">
-        {inCart ? (
+        {quantity > 0 ? (
           <div className="flex items-center justify-center space-x-3">
             <button
-              onClick={() => handleDecreaseQuantity(souvenir._id, qty)}
+              onClick={() => handleDecreaseQuantity(souvenir._id, quantity)}
               className="bg-[#115d5a] text-white rounded-full w-8 h-8 flex justify-center items-center hover:bg-[#E7C873] transition-colors"
               aria-label={`Decrease quantity of ${souvenir.name}`}
             >
               <FaMinus size={12} />
             </button>
-            <span className="text-lg font-medium">{qty}</span>
+            <span className="text-lg font-medium">{quantity}</span>
             <button
-              onClick={() => updateQty(souvenir._id, qty + 1)}
+              onClick={() => handleAddToCart(souvenir)}
               className="bg-[#115d5a] text-white rounded-full w-8 h-8 flex justify-center items-center hover:bg-[#E7C873] transition-colors"
               aria-label={`Increase quantity of ${souvenir.name}`}
             >
@@ -161,7 +170,7 @@ const TrendingCard = ({ souvenir, likedCards, toggleLike, handleAddToCart, handl
       </div>
     </div>
   );
-};
+});
 
 function Souvenirs() {
   // State
@@ -172,8 +181,10 @@ function Souvenirs() {
   const [isSearching, setIsSearching] = useState(false);
   const [sortOption, setSortOption] = useState("");
   const [layoutMode, setLayoutMode] = useState("grid");
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const scrollRef = useRef(null);
+  const scrollIntervalRef = useRef(null);
 
   // Zustand Cart Store
   const cartItems = useCartStore((state) => state.items);
@@ -181,84 +192,112 @@ function Souvenirs() {
   const updateQty = useCartStore((state) => state.updateCartQuantity);
   const removeFromCart = useCartStore((state) => state.removeFromCart);
 
+  // Optimized cart item lookup
+  const cartItemMap = useMemo(() => {
+    const map = {};
+    cartItems.forEach(item => {
+      map[item.product._id] = item.quantity;
+    });
+    return map;
+  }, [cartItems]);
+
   // Fetch Data
   useEffect(() => {
     const fetchProducts = async () => {
       try {
+        setIsLoading(true);
         const response = await getAllProducts();
         setSouvenirs(response.data?.products || []);
       } catch (err) {
         console.error("Failed to fetch products:", err);
         setSouvenirs([]);
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchProducts();
   }, []);
 
-  // Auto Scroll Logic
+  // Auto Scroll Logic with cleanup
   useEffect(() => {
-    let intervalId;
+    if (isLoading || souvenirs.length === 0) return;
+    
     const startAutoScroll = () => {
-      intervalId = setInterval(() => {
+      scrollIntervalRef.current = setInterval(() => {
         if (scrollRef.current && !isPaused) {
           const currentScroll = scrollRef.current.scrollLeft;
           const maxScroll = scrollRef.current.scrollWidth - scrollRef.current.clientWidth;
+          
           if (currentScroll >= maxScroll - 1) {
             scrollRef.current.scrollLeft = 0;
           } else {
             scrollRef.current.scrollLeft += 1;
           }
         }
-      }, 20);
+      }, 50); // Reduced frequency for better performance
     };
+    
     startAutoScroll();
-    return () => clearInterval(intervalId);
-  }, [isPaused]);
+    
+    return () => {
+      if (scrollIntervalRef.current) {
+        clearInterval(scrollIntervalRef.current);
+      }
+    };
+  }, [isPaused, isLoading, souvenirs]);
 
-  // Event Handlers
-  const toggleLike = (id) => {
+  // Optimized event handlers
+  const toggleLike = useCallback((id) => {
     setLikedCards((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
+  }, []);
 
-  const handleAddToCart = (souvenir) => {
+  const handleAddToCart = useCallback((souvenir) => {
     if (souvenir?._id) {
       addToCart(souvenir);
     } else {
       console.error("Attempted to add invalid souvenir to cart:", souvenir);
     }
-  };
+  }, [addToCart]);
 
-  const handleDecreaseQuantity = (productId, currentQuantity) => {
-    if (!removeFromCart) {
-      console.error("removeFromCart action is not available in the store!");
-      if (currentQuantity > 1) {
-        updateQty(productId, currentQuantity - 1);
-      }
-      return;
-    }
+  const handleDecreaseQuantity = useCallback((productId, currentQuantity) => {
     if (currentQuantity > 1) {
       updateQty(productId, currentQuantity - 1);
     } else {
       removeFromCart(productId);
     }
-  };
+  }, [updateQty, removeFromCart]);
 
-  // Filter and Sort Logic
-  const filteredSouvenirs = souvenirs.filter((s) => s.name.toLowerCase().includes(searchText.toLowerCase()));
-  const sortedSouvenirs = [...filteredSouvenirs].sort((a, b) => {
-    switch (sortOption) {
-      case "price-desc":
-        return (b.price || 0) - (a.price || 0);
-      case "price-asc":
-        return (a.price || 0) - (b.price || 0);
-      case "date-desc":
-        return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
-      case "date-asc":
-        return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
-      default:
-        return 0;
-    }
-  });
+  // Filter and Sort Logic with memoization
+  const filteredSouvenirs = useMemo(() => {
+    return souvenirs.filter((s) => 
+      s.name.toLowerCase().includes(searchText.toLowerCase())
+    );
+  }, [souvenirs, searchText]);
+
+  const sortedSouvenirs = useMemo(() => {
+    return [...filteredSouvenirs].sort((a, b) => {
+      switch (sortOption) {
+        case "price-desc":
+          return (b.price || 0) - (a.price || 0);
+        case "price-asc":
+          return (a.price || 0) - (b.price || 0);
+        case "date-desc":
+          return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+        case "date-asc":
+          return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
+        default:
+          return 0;
+      }
+    });
+  }, [filteredSouvenirs, sortOption]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="text-2xl text-[#115d5a]">Loading souvenirs...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-gray-100">
@@ -292,12 +331,11 @@ function Souvenirs() {
             <TrendingCard
               key={s._id}
               souvenir={s}
-              likedCards={likedCards}
+              isLiked={!!likedCards[s._id]}
               toggleLike={toggleLike}
               handleAddToCart={handleAddToCart}
               handleDecreaseQuantity={handleDecreaseQuantity}
-              updateQty={updateQty}
-              cartItems={cartItems}
+              quantity={cartItemMap[s._id] || 0}
             />
           ))}
         </div>
@@ -396,18 +434,17 @@ function Souvenirs() {
               <ProductCard
                 key={s._id}
                 souvenir={s}
-                likedCards={likedCards}
+                isLiked={!!likedCards[s._id]}
                 toggleLike={toggleLike}
                 handleAddToCart={handleAddToCart}
                 handleDecreaseQuantity={handleDecreaseQuantity}
-                updateQty={updateQty}
-                cartItems={cartItems}
+                quantity={cartItemMap[s._id] || 0}
                 layoutMode={layoutMode}
               />
             ))
           ) : (
             <div className="col-span-full text-center text-gray-500 py-10">
-              {souvenirs.length === 0 ? "Loading souvenirs..." : "No souvenirs found matching your search."}
+              {souvenirs.length === 0 ? "No souvenirs available" : "No souvenirs found matching your search."}
             </div>
           )}
         </div>

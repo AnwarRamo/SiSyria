@@ -59,6 +59,17 @@ export const TripService = {
       };
     }
   },
+    getPublicTrips: async () => {
+      try {
+        const response = await apiClient.get('/trips');
+        return response.data;
+      } catch (error) {
+        throw error.response?.data || {
+          code: 'TRIPS_ERROR',
+          message: 'Failed to load trips'
+        };
+      }
+    },
 getRegisteredTrips: async () => {
     try {
       const response = await apiClient.get('/registered');

@@ -26,13 +26,14 @@ const publicRoutes = [
   { path: "/about-us", element: <AboutUs /> },
   { path: "/contact-us", element: <ContactUs /> },
   { path: "/cart", element: <CartPage /> },
+    { path: "/travel", element: <Travel /> },
+  { path: "/souvenirs", element: <Souvenirs /> },
 ];
 
 // Authenticated User Routes
 const protectedRoutes = [
   { path: "/profile", element: <Profile /> },
-  { path: "/travel", element: <Travel /> },
-  { path: "/souvenirs", element: <Souvenirs /> },
+
 ];
 
 const AppRoutes = () => {
