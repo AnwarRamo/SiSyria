@@ -10,7 +10,7 @@ import { useAuthStore } from '../../api/stores/auth.store';
 import { TripService } from '../../api/services/trip.service';
 
 // Layout & Assets
-import Navbar from '../../layout/Navbar';
+import Navbar from '../layout/Navbar';
 import HERO_IMAGE_URL from '../../assets/images/anwar3.jpeg';
 
 // To clean up the main component, we extract the trip card into its own component.
