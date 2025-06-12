@@ -44,7 +44,7 @@ export const Home = () => {
     
     const fetchFeaturedTrips = async () => {
       try {
-        const response = await TripService.getFeaturedTrips(3);
+        const response = await TripService.getPublicTrips(3);
         if (isMounted) {
           setFeaturedTrips(response);
           setLoading(false);
