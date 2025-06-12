@@ -13,7 +13,7 @@ const TripsPage = () => {
   useEffect(() => {
     const fetchTrips = async () => {
       try {
-        const data = await TripService.getAllTrips();
+        const data = await TripService.getPublicTrips();
         setTrips(data);
       } catch (err) {
         setError(err.message || 'Failed to load trips');
