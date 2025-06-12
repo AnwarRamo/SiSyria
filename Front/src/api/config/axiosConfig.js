@@ -8,6 +8,7 @@ const apiClient = axios.create({
     'Content-Type': 'application/json',
   },
 });
+console.log('ENV TEST:', process.env.REACT_APP_API_URL);
 
 // Add a request interceptor to attach the token from localStorage
 apiClient.interceptors.request.use(
