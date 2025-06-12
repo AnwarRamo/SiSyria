@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { toast } from 'react-toastify';
@@ -134,35 +133,46 @@ export const Home = () => {
             ) : error ? (
               <div className="text-center text-red-500 py-8">{error}</div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                {featuredTrips.map((trip) => (
-                  <motion.div 
-                    key={trip.id}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5 }}
-                    className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow"
-                  >
-                    <img 
-                      src={trip.image} 
-                      alt={trip.title} 
-                      className="w-full h-48 object-cover"
-                      loading="lazy"
-                    />
-                    <div className="p-6">
-                      <h3 className="text-xl font-bold text-[#115d5a] mb-2">{trip.title}</h3>
-                      <p className="text-gray-600 mb-4 line-clamp-2">{trip.description}</p>
-                      <div className="flex justify-between items-center">
-                        <span className="font-bold text-lg">${trip.price}</span>
-                        <button className="bg-[#115d5a] text-white px-4 py-2 rounded-lg hover:bg-[#0d4a47] transition-colors">
-                          View Details
-                        </button>
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {featuredTrips.map((trip) => (
+                    <motion.div 
+                      key={trip.id}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      whileInView={{ opacity: 1, scale: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.5 }}
+                      className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow"
+                    >
+                      <img 
+                        src={trip.images?.[0] || trip.image || '/default-image.jpg'} 
+                        alt={trip.title} 
+                        className="w-full h-48 object-cover"
+                        loading="lazy"
+                      />
+                      <div className="p-6">
+                        <h3 className="text-xl font-bold text-[#115d5a] mb-2">{trip.title}</h3>
+                        <p className="text-gray-600 mb-4 line-clamp-2">{trip.description}</p>
+                        <div className="flex justify-between items-center">
+                          <span className="font-bold text-lg">${trip.price}</span>
+                          <button className="bg-[#115d5a] text-white px-4 py-2 rounded-lg hover:bg-[#0d4a47] transition-colors">
+                            View Details
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
+                    </motion.div>
+                  ))}
+                </div>
+
+                <div className="text-center mt-8">
+                  <button
+                    onClick={() => window.location.href = '/trips'}
+                    className="bg-[#115d5a] text-white px-6 py-3 rounded-lg hover:bg-[#0d4a47] transition-colors"
+                  >
+                    See More Trips
+                  </button>
+                </div>
+              </>
             )}
           </div>
         </section>
