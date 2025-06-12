@@ -1,11 +1,12 @@
-// src/stores/auth.store.js
 import { create } from 'zustand';
 import { AuthService } from '../services/auth.service';
+import { TripService } from '../services/trip.service';
 
 export const useAuthStore = create((set, get) => ({
   user: null,
-  loading: true, // Start with loading: true to indicate initial hydration is pending
+  loading: true,
   error: null,
+  savedTrips: [],
 
   login: async (credentials) => {
     try {
@@ -27,72 +28,102 @@ export const useAuthStore = create((set, get) => ({
     } catch (error) {
       console.error('Login error:', error);
       const errorMessage = error.response?.data?.message || 'Login failed';
-      set({ error: errorMessage, loading: false, user: null });
+      set({ error: { message: errorMessage }, loading: false, user: null });
+      throw new Error(errorMessage);
+    }
+  },
+
+  register: async (credentials) => {
+    try {
+      set({ loading: true, error: null });
+      const userData = await AuthService.register(credentials);
+      const formattedUser = {
+        id: userData._id,
+        username: userData.username,
+        displayName: userData.displayName || userData.username,
+        email: userData.email,
+        role: userData.role,
+        createdAt: userData.createdAt,
+        avatar: userData.avatar,
+      };
+      set({ user: formattedUser, loading: false });
+      return formattedUser;
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || 'Registration failed';
+      set({ error: { message: errorMessage }, loading: false, user: null });
       throw new Error(errorMessage);
     }
   },
 
   hydrate: async () => {
-    // Prevent re-hydration if a user is already loaded
     if (get().user) {
-        set({ loading: false });
-        return;
+      set({ loading: false });
+      return;
     }
-
-    // Ensure we don't have a tokenless hydration attempt causing flashes
     if (!localStorage.getItem('accessToken')) {
-        set({ user: null, loading: false, error: null });
-        return;
+      set({ user: null, loading: false, error: null });
+      return;
     }
-    
     try {
-      const userData = await AuthService.getCurrentUser();
-      const user = userData?.user;
-
-      if (user?._id) {
-        const formattedUser = {
-          id: user._id,
-          username: user.username,
-          displayName: user.displayName || user.username,
-          email: user.email,
-          role: user.role,
-          createdAt: user.createdAt,
-          avatar: user.avatar,
-        };
+      const { user: userData } = await AuthService.getCurrentUser();
+      if (userData?._id) {
+        const formattedUser = { /* ...user formatting... */ };
         set({ user: formattedUser, loading: false, error: null });
       } else {
         set({ user: null, loading: false, error: null });
       }
     } catch (error) {
       console.error('Hydration error:', error);
-      // This catch is critical for new users or expired sessions
       set({ user: null, loading: false, error: null });
     }
   },
 
   logout: async () => {
-    set({ loading: true, error: null });
     try {
+      set({ loading: true, error: null });
       await AuthService.logout();
-      set({ user: null, loading: false });
-      // In a real app, you would use React Router's navigate function here
-      // For this example, we'll use window.location
+      set({ user: null, savedTrips: [], loading: false });
       window.location.href = '/login';
     } catch (error) {
       console.error('Logout failed:', error);
-      set({
-        user: null, // Still log the user out on the frontend
-        error: { code: 'LOGOUT_ERROR', message: 'Logout failed on server' },
-        loading: false,
-      });
+      set({ user: null, savedTrips: [], error: { message: 'Logout failed' }, loading: false });
     }
   },
-  
-  savedTrips: [],
-  addTripToProfile: (trip) => {
-    const currentTrips = get().savedTrips || [];
-    if (currentTrips.some(t => t.id === trip.id)) return;
-    set({ savedTrips: [...currentTrips, trip] });
+
+  fetchRegisteredTrips: async (force = false) => {
+    // BUG FIX: Add a check to ensure a user is logged in before fetching.
+    if (!get().user) {
+      return;
+    }
+    if (!force && get().savedTrips.length > 0) {
+      return;
+    }
+    try {
+      const trips = await TripService.getRegisteredTrips();
+      set({ savedTrips: trips || [] });
+    } catch (error) {
+      console.error("Failed to fetch registered trips:", error);
+    }
+  },
+
+  toggleTripRegistration: async (tripId) => {
+    const isRegistered = get().savedTrips.some(trip => trip._id === tripId);
+    try {
+      if (isRegistered) {
+        await TripService.unregisterTrip(tripId);
+        set(state => ({
+          savedTrips: state.savedTrips.filter(trip => trip._id !== tripId)
+        }));
+      } else {
+        const registeredTrip = await TripService.registerTrip(tripId);
+        set(state => ({
+          savedTrips: [...state.savedTrips, registeredTrip]
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to toggle trip registration:', error);
+      throw new Error('Could not update trip registration.');
+    }
   },
 
   isAdmin: () => get().user?.role === 'admin',
