@@ -1,263 +1,180 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { FaMapMarkerAlt, FaSpinner, FaExclamationTriangle } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import { toast } from 'react-toastify';
-import { TripService } from '../api/services/trip.service';
-import NavBar from '../layout/Navbar';
-import Footer from '../layout/Footer';
-import AutoSlider from '../components/user/AutoSlider';
-import mon from '../assets/images/sekh4.jpg';
+// BUG FIX: Import the 'shallow' equality checker from Zustand
+import { shallow } from 'zustand/shallow';
 
-const CHOOSE_US_ITEMS = [
-  {
-    icon: "🌟",
-    title: "Best Prices",
-    description: "We offer the best prices for your dream vacations.",
-    additional: "Enjoy exclusive discounts and seasonal offers."
-  },
-  {
-    icon: "✈️",
-    title: "Easy Booking",
-    description: "Book your trips easily with our user-friendly platform.",
-    additional: "24/7 customer support to assist you anytime."
-  },
-  {
-    icon: "🛡️",
-    title: "Safe & Secure",
-    description: "Your safety and security are our top priorities.",
-    additional: "Certified and verified travel partners."
-  },
-];
+// Central Store & Services
+import { useAuthStore } from '../../api/stores/auth.store';
+import { TripService } from '../../api/services/trip.service';
 
-export const Home = () => {
-  const [featuredTrips, setFeaturedTrips] = useState([]);
+// Layout & Assets
+import Navbar from '../../layout/Navbar';
+import HERO_IMAGE_URL from '../../assets/images/anwar3.jpeg';
+
+// To clean up the main component, we extract the trip card into its own component.
+const TripCard = ({ trip, isRegistered, isLoading, onToggleRegister }) => {
+  return (
+    <motion.div
+      className="bg-white rounded-lg shadow-lg overflow-hidden flex flex-col"
+      layout
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <img
+        src={trip.images[0]}
+        alt={trip.title}
+        className="w-full h-48 object-cover"
+        loading="lazy" // SEO/PERFORMANCE: Lazy load images
+      />
+      <div className="p-5 flex flex-col flex-grow">
+        <h3 className="text-xl font-bold text-gray-800">{trip.title}</h3>
+        <p className="text-teal-600 text-sm mb-3 flex items-center">
+          <FaMapMarkerAlt className="inline mr-2" /> {trip.destination}
+        </p>
+        <p className="text-gray-600 text-sm mb-4 flex-grow">{trip.description}</p>
+        <button
+          disabled={isLoading}
+          onClick={() => onToggleRegister(trip._id)}
+          className={`w-full mt-auto py-2 px-4 rounded-lg text-white font-semibold transition-all duration-300 ${
+            isLoading
+              ? 'bg-gray-400 cursor-not-allowed'
+              : isRegistered
+              ? 'bg-yellow-600 hover:bg-yellow-700'
+              : 'bg-teal-700 hover:bg-teal-800'
+          }`}
+        >
+          {isLoading ? (
+            <FaSpinner className="animate-spin inline-block" />
+          ) : isRegistered ? (
+            '✓ Registered'
+          ) : (
+            'Register Now'
+          )}
+        </button>
+      </div>
+    </motion.div>
+  );
+};
+
+const TripsPage = () => {
+  const [trips, setTrips] = useState([]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    message: ''
-  });
+  const [registerLoadingIds, setRegisterLoadingIds] = useState([]);
+
+  // BUG FIX: Apply the 'shallow' equality checker here.
+  // This tells Zustand to only re-render if the *values* inside the object change,
+  // preventing the infinite loop.
+  const { savedTrips, toggleTripRegistration, fetchRegisteredTrips } = useAuthStore(
+    (state) => ({
+      savedTrips: state.savedTrips,
+      toggleTripRegistration: state.toggleTripRegistration,
+      fetchRegisteredTrips: state.fetchRegisteredTrips,
+    }),
+    shallow
+  );
+
+  // PERFORMANCE FIX: Fetch trips with pagination.
+  const fetchTrips = useCallback(async (pageNum) => {
+    setLoading(true);
+    try {
+      // Assumes your service returns a paginated response like { trips: [...], page: 1, totalPages: 5 }
+      const data = await TripService.getPublicTrips({ page: pageNum, limit: 6 });
+      setTrips((prev) => (pageNum === 1 ? data.trips : [...prev, ...data.trips]));
+      setHasMore(data.page < data.totalPages);
+    } catch (err) {
+      setError(err.message || 'Failed to load trips');
+    } finally {
+      setLoading(false);
+    }
+  }, []); // Empty dependency array is correct here as the function is self-contained.
 
   useEffect(() => {
-    let isMounted = true;
+    // This effect is now safe and will only run when the component mounts,
+    // or if the function references from the store *actually* change (they won't).
+    fetchTrips(1);
+    fetchRegisteredTrips();
+  }, [fetchTrips, fetchRegisteredTrips]);
 
-    const fetchFeaturedTrips = async () => {
-      try {
-        // --- FIX START ---
-        // Pass an object with the 'limit' property
-        const response = await TripService.getPublicTrips({ limit: 3 });
-        // The response from TripService.getPublicTrips is expected to be an object like { trips: [...], page: ..., totalPages: ... }
-        // So, access the 'trips' array from the response.
-        if (isMounted) {
-          setFeaturedTrips(response.trips || []); // Ensure it's an array, even if empty
-          setLoading(false);
-        }
-        // --- FIX END ---
-      } catch (err) {
-        if (isMounted) {
-          setError(err.message || 'Failed to load destinations');
-          setLoading(false);
-        }
-      }
-    };
-
-    fetchFeaturedTrips();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+  const handleLoadMore = () => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchTrips(nextPage);
   };
 
-  const handleContactSubmit = async (e) => {
-    e.preventDefault();
-
-    if (!formData.name || !formData.email || !formData.message) {
-      toast.error("Please fill in all fields");
-      return;
-    }
-
+  const handleToggleRegister = async (tripId) => {
+    setRegisterLoadingIds((prev) => [...prev, tripId]);
     try {
-      // In a real app, you would send this to your backend
-      // await ContactService.sendMessage(formData);
-
-      toast.success("Thank you for your message! We'll be in touch soon.");
-      setFormData({ name: '', email: '', message: '' });
+      await toggleTripRegistration(tripId);
+      toast.success('Your registration has been updated!');
     } catch (err) {
-      toast.error("Failed to send message. Please try again later.");
+      toast.error(err.message || 'Failed to update registration');
+    } finally {
+      setRegisterLoadingIds((prev) => prev.filter((id) => id !== tripId));
     }
   };
+
+  const heroStyle = useMemo(
+    () => ({
+      backgroundImage: `linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0.2)), url(${HERO_IMAGE_URL})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+    }),
+    []
+  );
 
   return (
-    <div className="bg-[#f8fafc] font-poppins min-h-screen flex flex-col">
-      <NavBar />
+    <div className="bg-gray-100 min-h-screen">
+      <Navbar />
+      <header className="h-96 text-white flex items-center justify-center" style={heroStyle}>
+        <h1 className="text-5xl font-bold tracking-wider">Discover Our Trips</h1>
+      </header>
 
-      <main className="flex-grow">
-        <AutoSlider trips={featuredTrips} />
-
-        {/* Why Choose Us Section */}
-        <section className="bg-gradient-to-r from-[#115d5a] to-[#1a7c78] py-16 px-4">
-          <div className="max-w-7xl mx-auto">
-            <h1 className="text-4xl font-bold text-center text-white mb-8">Why Choose Us?</h1>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {CHOOSE_US_ITEMS.map((item, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow"
-                >
-                  <div className="text-4xl mb-4">{item.icon}</div>
-                  <h3 className="text-xl font-bold text-[#115d5a] mb-2">{item.title}</h3>
-                  <p className="text-gray-700 mb-3">{item.description}</p>
-                  <p className="text-gray-600 text-sm">{item.additional}</p>
-                </motion.div>
+      <main className="p-6 md:p-10">
+        <h2 className="text-3xl font-bold mb-8 text-center text-gray-800">Available Trips</h2>
+        {loading && trips.length === 0 ? (
+          <div className="flex justify-center mt-10">
+            <FaSpinner className="animate-spin text-teal-700 text-5xl" />
+          </div>
+        ) : error ? (
+          <div className="text-red-500 text-center flex flex-col items-center">
+            <FaExclamationTriangle className="text-4xl mb-2" /> {error}
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              {trips.map((trip) => (
+                <TripCard
+                  key={trip._id}
+                  trip={trip}
+                  isRegistered={savedTrips.some((savedTrip) => savedTrip._id === trip._id)}
+                  isLoading={registerLoadingIds.includes(trip._id)}
+                  onToggleRegister={handleToggleRegister}
+                />
               ))}
             </div>
-          </div>
-        </section>
 
-        {/* Popular Trips Section */}
-        <section className="py-12 px-4">
-          <div className="max-w-7xl mx-auto">
-            <h2 className="text-4xl font-bold text-center text-[#115d5a] mb-10">Popular Trips</h2>
-            {loading ? (
-              <div className="flex justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#115d5a]"></div>
-              </div>
-            ) : error ? (
-              <div className="text-center text-red-500 py-8">{error}</div>
-            ) : (
-              <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {featuredTrips.map((trip) => (
-                    <motion.div
-                      key={trip._id} 
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      whileInView={{ opacity: 1, scale: 1 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.5 }}
-                      className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow"
-                    >
-                      <img
-                        src={trip.images?.[0] || '/default-image.jpg'}
-                        alt={trip.title}
-                        className="w-full h-48 object-cover"
-                        loading="lazy"
-                      />
-                      <div className="p-6">
-                        <h3 className="text-xl font-bold text-[#115d5a] mb-2">{trip.title}</h3>
-                        <p className="text-gray-600 mb-4 line-clamp-2">{trip.description}</p>
-                        <div className="flex justify-between items-center">
-                          <span className="font-bold text-lg">${Number(trip.price).toFixed(2)}</span> {/* Ensure price is formatted */}
-                          <button
-                            onClick={() => window.location.href = `/travel/${trip._id}`} // Example: navigate to trip details
-                            className="bg-[#115d5a] text-white px-4 py-2 rounded-lg hover:bg-[#0d4a47] transition-colors"
-                          >
-                            View Details
-                          </button>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-
-                <div className="text-center mt-8">
-                  <button
-                    onClick={() => window.location.href = '/travel'}
-                    className="bg-[#115d5a] text-white px-6 py-3 rounded-lg hover:bg-[#0d4a47] transition-colors"
-                  >
-                    See More Trips
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        </section>
-
-        {/* Contact Section */}
-        <section className="relative">
-          <div className="aspect-w-16 aspect-h-9 md:aspect-none">
-            <img
-              className="w-full h-[500px] md:h-[700px] object-cover"
-              src={mon}
-              alt="Syrian mountainside landscape with ancient ruins"
-              loading="lazy"
-            />
-          </div>
-          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-            <div className="max-w-4xl w-full p-4 md:p-8">
-              <form
-                onSubmit={handleContactSubmit}
-                className="bg-white bg-opacity-90 backdrop-blur-sm rounded-2xl p-6 md:p-8 shadow-xl"
-              >
-                <h2 className="text-3xl font-bold text-[#115d5a] mb-6 text-center">
-                  Contact Us
-                </h2>
-
-                <div className="mb-4">
-                  <label htmlFor="name" className="block text-gray-700 mb-2">Name</label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#115d5a] focus:border-transparent"
-                    placeholder="Your name"
-                  />
-                </div>
-
-                <div className="mb-4">
-                  <label htmlFor="email" className="block text-gray-700 mb-2">Email</label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#115d5a] focus:border-transparent"
-                    placeholder="Your email"
-                  />
-                </div>
-
-                <div className="mb-6">
-                  <label htmlFor="message" className="block text-gray-700 mb-2">Message</label>
-                  <textarea
-                    id="message"
-                    name="message"
-                    value={formData.message}
-                    onChange={handleInputChange}
-                    rows="4"
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#115d5a] focus:border-transparent"
-                    placeholder="Your message"
-                  ></textarea>
-                </div>
-
+            {hasMore && (
+              <div className="text-center mt-10">
                 <button
-                  type="submit"
-                  className="w-full bg-gradient-to-r from-[#115d5a] to-[#1a7c78] text-white py-3 rounded-lg font-bold hover:from-[#0d4a47] hover:to-[#115d5a] transition-all shadow-md"
+                  onClick={handleLoadMore}
+                  disabled={loading}
+                  className="bg-teal-700 text-white font-bold py-3 px-8 rounded-lg hover:bg-teal-800 transition-colors disabled:bg-gray-400"
                 >
-                  Send Message
+                  {loading ? 'Loading...' : 'Load More'}
                 </button>
-              </form>
-            </div>
-          </div>
-        </section>
+              </div>
+            )}
+          </>
+        )}
       </main>
-
-      <Footer />
     </div>
   );
 };
 
-export default Home;
+export default TripsPage;
