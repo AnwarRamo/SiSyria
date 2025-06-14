@@ -80,8 +80,7 @@ export const Home = () => {
     }
 
     try {
-      // Example: send message to backend (not implemented)
-      // await ContactService.sendMessage(formData);
+   
 
       toast.success("Thank you for your message! We'll be in touch soon.");
       setFormData({ name: '', email: '', message: '' });
