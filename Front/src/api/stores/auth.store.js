@@ -7,127 +7,125 @@ export const useAuthStore = create((set, get) => ({
   loading: true,
   error: null,
   savedTrips: [],
+  _hasFetchedRegisteredTrips: false,
+
+  _formatUser: (userData) => {
+    if (!userData || !userData._id) return null;
+    return {
+      id: userData._id,
+      username: userData.username,
+      displayName: userData.displayName || userData.username,
+      email: userData.email,
+      role: userData.role,
+      createdAt: userData.createdAt,
+      avatar: userData.avatar,
+    };
+  },
+
+  _areUsersSameById: (u1, u2) => {
+    if (!u1 && !u2) return true;
+    if (!u1 || !u2) return false;
+    return u1.id === u2.id;
+  },
 
   login: async (credentials) => {
+    set({ loading: true, error: null });
     try {
-      set({ loading: true, error: null });
       const userData = await AuthService.login(credentials);
+      console.log('🧩 Raw userData from API:', userData);
 
-      const formattedUser = {
-        id: userData._id,
-        username: userData.username,
-        displayName: userData.displayName || userData.username,
-        email: userData.email,
-        role: userData.role,
-        createdAt: userData.createdAt,
-        avatar: userData.avatar,
-      };
+      const formatted = get()._formatUser(userData);
+      console.log('🧩 Formatted user:', formatted);
 
-      set({ user: formattedUser, loading: false });
-      return formattedUser;
-    } catch (error) {
-      console.error('Login error:', error);
-      const errorMessage = error.response?.data?.message || 'Login failed';
-      set({ error: { message: errorMessage }, loading: false, user: null });
-      throw new Error(errorMessage);
+      if (!get()._areUsersSameById(get().user, formatted)) {
+        set({ user: formatted, _hasFetchedRegisteredTrips: false });
+      }
+      set({ loading: false });
+      return formatted;
+    } catch (err) {
+      console.error('🔴 Login error:', err);
+      const msg = err.response?.data?.message || err.message || 'Login failed';
+      set({ error: { message: msg }, loading: false, user: null });
+      throw new Error(msg);
     }
   },
 
   register: async (credentials) => {
+    set({ loading: true, error: null });
     try {
-      set({ loading: true, error: null });
       const userData = await AuthService.register(credentials);
-      const formattedUser = {
-        id: userData._id,
-        username: userData.username,
-        displayName: userData.displayName || userData.username,
-        email: userData.email,
-        role: userData.role,
-        createdAt: userData.createdAt,
-        avatar: userData.avatar,
-      };
-      set({ user: formattedUser, loading: false });
-      return formattedUser;
-    } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Registration failed';
-      set({ error: { message: errorMessage }, loading: false, user: null });
-      throw new Error(errorMessage);
+      const formatted = get()._formatUser(userData);
+      if (!get()._areUsersSameById(get().user, formatted)) {
+        set({ user: formatted, _hasFetchedRegisteredTrips: false });
+      }
+      set({ loading: false });
+      return formatted;
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Registration failed';
+      set({ error: { message: msg }, loading: false, user: null });
+      throw new Error(msg);
     }
   },
-hydrate: async () => {
-  if (get().user) {
-    set({ loading: false });
-    return;
-  }
 
-  try {
-    const { user: userData } = await AuthService.getCurrentUser(); // Server checks cookies
-    if (userData?._id) {
-      const formattedUser = {
-        id: userData._id,
-        username: userData.username,
-        displayName: userData.displayName || userData.username,
-        email: userData.email,
-        role: userData.role,
-        createdAt: userData.createdAt,
-        avatar: userData.avatar,
-      };
-      set({ user: formattedUser, loading: false, error: null });
-    } else {
-      set({ user: null, loading: false, error: null });
+  hydrate: async () => {
+    if (get().user !== null || get().loading === false) return;
+    set({ loading: true, error: null });
+    try {
+      const userData = await AuthService.getCurrentUser();
+      console.log('🌱 Hydration raw:', userData);
+      const formatted = get()._formatUser(userData);
+      if (!get()._areUsersSameById(get().user, formatted)) {
+        set({ user: formatted, _hasFetchedRegisteredTrips: false });
+      }
+      set({ loading: false });
+    } catch (err) {
+      console.error('🔴 Hydration error:', err);
+      if (get().user !== null) {
+        set({ user: null });
+      }
+      set({ loading: false, error: null });
     }
-  } catch (error) {
-    console.error('Hydration error:', error);
-    set({ user: null, loading: false, error: null });
-  }
-},
-
-
+  },
 
   logout: async () => {
+    set({ loading: true, error: null });
     try {
-      set({ loading: true, error: null });
       await AuthService.logout();
-      set({ user: null, savedTrips: [], loading: false });
+      set({ user: null, savedTrips: [], loading: false, _hasFetchedRegisteredTrips: false });
       window.location.href = '/login';
-    } catch (error) {
-      console.error('Logout failed:', error);
+    } catch (err) {
+      console.error('🔴 Logout error:', err);
       set({ user: null, savedTrips: [], error: { message: 'Logout failed' }, loading: false });
     }
   },
 
-  fetchRegisteredTrips: async (force = false) => {
-    // BUG FIX: Add a check to ensure a user is logged in before fetching.
-    if (!get().user) {
-      return;
-    }
-    if (!force && get().savedTrips.length > 0) {
-      return;
-    }
+  fetchRegisteredTrips: async () => {
+    const st = get();
+    if (!st.user || st._hasFetchedRegisteredTrips) return;
     try {
-      const trips = await TripService.getRegisteredTrips();
-      set({ savedTrips: trips || [] });
-    } catch (error) {
-      console.error("Failed to fetch registered trips:", error);
+      const trips = (await TripService.getRegisteredTrips()) || [];
+      const changed = trips.length !== st.savedTrips.length ||
+        trips.some((t, i) => t._id !== st.savedTrips[i]?._id);
+      if (changed) set({ savedTrips: trips });
+      set({ _hasFetchedRegisteredTrips: true });
+    } catch (err) {
+      console.error('🔴 Trips fetch error:', err);
+      set({ _hasFetchedRegisteredTrips: true });
     }
   },
 
   toggleTripRegistration: async (tripId) => {
-    const isRegistered = get().savedTrips.some(trip => trip._id === tripId);
+    const registered = get().savedTrips.some(t => t._id === tripId);
     try {
-      if (isRegistered) {
+      if (registered) {
         await TripService.unregisterTrip(tripId);
-        set(state => ({
-          savedTrips: state.savedTrips.filter(trip => trip._id !== tripId)
-        }));
+        set(state => ({ savedTrips: state.savedTrips.filter(t => t._id !== tripId) }));
       } else {
-        const registeredTrip = await TripService.registerTrip(tripId);
-        set(state => ({
-          savedTrips: [...state.savedTrips, registeredTrip]
-        }));
+        const newTrip = await TripService.registerTrip(tripId);
+        set(state => ({ savedTrips: [...state.savedTrips, newTrip] }));
       }
-    } catch (error) {
-      console.error('Failed to toggle trip registration:', error);
+    } catch (err) {
+      console.error('🔴 Toggle trip error:', err);
       throw new Error('Could not update trip registration.');
     }
   },
