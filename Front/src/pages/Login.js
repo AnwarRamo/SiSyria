@@ -5,7 +5,7 @@ import { toast } from "react-toastify";
 import NavBar from "../layout/Navbar";
 import Footer from "../layout/Footer";
 
-const Login = () => {
+export const Login = () => {
   const navigate = useNavigate();
   const { login, loading, error } = useAuthStore();
   const [formData, setFormData] = useState({ email: "", password: "" });
