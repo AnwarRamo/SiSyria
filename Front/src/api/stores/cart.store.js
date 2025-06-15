@@ -1,15 +1,21 @@
 import { create } from 'zustand';
+import { 
+  addToCart as apiAddToCart, 
+  removeFromCart as apiRemoveFromCart, 
+  updateCartQuantity as apiUpdateCartQuantity 
+} from '../services/cartService';
 
 export const useCartStore = create((set, get) => ({
   items: [],
   
-  // Optimistic add to cart with immediate UI update
+  // Optimistic add to cart
   addToCart: (product) => {
     try {
       const items = [...get().items];
       const existingIndex = items.findIndex(i => i.product._id === product._id);
+      const originalItems = [...items]; // For revert on error
       
-      // Optimistic UI update
+      // Optimistic update
       if (existingIndex > -1) {
         const updatedItems = [...items];
         updatedItems[existingIndex] = {
@@ -22,10 +28,10 @@ export const useCartStore = create((set, get) => ({
       }
 
       // Async API call (fire and forget)
-      addToCart(product._id).catch(error => {
+      apiAddToCart(product._id).catch(error => {
         console.error('Add to cart failed:', error);
         // Revert on error
-        set({ items });
+        set({ items: originalItems });
       });
     } catch (error) {
       console.error('Optimistic update failed:', error);
@@ -36,16 +42,17 @@ export const useCartStore = create((set, get) => ({
   removeFromCart: (productId) => {
     try {
       const items = [...get().items];
+      const originalItems = [...items]; // For revert on error
       const newItems = items.filter(item => item.product._id !== productId);
       
-      // Optimistic UI update
+      // Optimistic update
       set({ items: newItems });
       
       // Async API call
-      removeFromCart(productId).catch(error => {
+      apiRemoveFromCart(productId).catch(error => {
         console.error('Remove from cart failed:', error);
         // Revert on error
-        set({ items });
+        set({ items: originalItems });
       });
     } catch (error) {
       console.error('Optimistic update failed:', error);
@@ -56,6 +63,7 @@ export const useCartStore = create((set, get) => ({
   updateCartQuantity: (productId, quantity) => {
     try {
       const items = [...get().items];
+      const originalItems = [...items]; // For revert on error
       const itemIndex = items.findIndex(item => item.product._id === productId);
       
       if (itemIndex === -1) return;
@@ -66,14 +74,14 @@ export const useCartStore = create((set, get) => ({
         quantity
       };
       
-      // Optimistic UI update
+      // Optimistic update
       set({ items: updatedItems });
       
       // Async API call
-      updateCartQuantity(productId, quantity).catch(error => {
+      apiUpdateCartQuantity(productId, quantity).catch(error => {
         console.error('Update cart quantity failed:', error);
         // Revert on error
-        set({ items });
+        set({ items: originalItems });
       });
     } catch (error) {
       console.error('Optimistic update failed:', error);
