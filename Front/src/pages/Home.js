@@ -29,8 +29,7 @@ const CHOOSE_US_ITEMS = [
 ];
 
 export const Home = () => {
-  const [allTrips, setAllTrips] = useState([]);
-  const [visibleTripsCount, setVisibleTripsCount] = useState(3);
+  const [featuredTrips, setFeaturedTrips] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
@@ -39,16 +38,14 @@ export const Home = () => {
     message: ''
   });
 
-  const visibleTrips = allTrips.slice(0, visibleTripsCount);
-
   useEffect(() => {
     let isMounted = true;
 
-    const fetchTrips = async () => {
+    const fetchFeaturedTrips = async () => {
       try {
-        const response = await TripService.getPublicTrips(); // Get all trips
+        const response = await TripService.getPublicTrips({ limit: 3 });
         if (isMounted) {
-          setAllTrips(response.trips || []);
+          setFeaturedTrips(response.trips || []);
           setLoading(false);
         }
       } catch (err) {
@@ -59,7 +56,7 @@ export const Home = () => {
       }
     };
 
-    fetchTrips();
+    fetchFeaturedTrips();
 
     return () => {
       isMounted = false;
@@ -83,7 +80,8 @@ export const Home = () => {
     }
 
     try {
-      // Here you can send the contact data to a backend endpoint if needed
+      // Example: send message to backend (not implemented)
+      // await ContactService.sendMessage(formData);
 
       toast.success("Thank you for your message! We'll be in touch soon.");
       setFormData({ name: '', email: '', message: '' });
@@ -97,7 +95,7 @@ export const Home = () => {
       <NavBar />
 
       <main className="flex-grow">
-        <AutoSlider trips={visibleTrips} />
+        <AutoSlider trips={featuredTrips} />
 
         {/* Why Choose Us Section */}
         <section className="bg-gradient-to-r from-[#115d5a] to-[#1a7c78] py-16 px-4">
@@ -135,14 +133,14 @@ export const Home = () => {
               <div className="text-center text-red-500 py-8">{error}</div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
-                {visibleTrips.map((trip) => (
+                {featuredTrips.map((trip) => (
                   <motion.div
                     key={trip._id}
                     initial={{ opacity: 0, scale: 0.9 }}
                     whileInView={{ opacity: 1, scale: 1 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.5 }}
-                    className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow"
+                    className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow w-full max-w-full min-w-0"
                   >
                     <img
                       src={trip.images?.[0] || '/default-image.jpg'}
@@ -168,10 +166,10 @@ export const Home = () => {
               </div>
             )}
 
-            {!loading && !error && visibleTripsCount < allTrips.length && (
+            {!loading && !error && (
               <div className="text-center mt-8">
                 <button
-                  onClick={() => setVisibleTripsCount(prev => prev + 3)}
+                  onClick={() => window.location.href = '/travel'}
                   className="bg-[#115d5a] text-white px-6 py-3 rounded-lg hover:bg-[#0d4a47] transition-colors"
                 >
                   See More Trips
