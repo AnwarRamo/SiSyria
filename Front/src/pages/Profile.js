@@ -135,7 +135,7 @@ const ProfileContent = React.memo(({ activeTab, user, savedTrips }) => {
 
 // --- Main Component ---
 
-function Profile() {
+export function Profile() {
   const { user, loading, logout, fetchRegisteredTrips, savedTrips } = useAuthStore(
     (state) => ({
       user: state.user,
