@@ -9,7 +9,7 @@ import { useAuthStore } from '../api/stores/auth.store';
 import Avatar from '../components/ui/Avatar';
 import StatsRadarChart from '../components/ui/StatsRadarChart';
 import Navbar from '../layout/Navbar';
-import FullPageSpinner from '../components/LoadingSpinner';
+import FullPageSpinner from '../components/LodingSpinner';
 
 const PROFILE_BG_IMAGE_URL = 'https://placehold.co/1920x400/115d5a/white?text=Profile+Cover';
 
