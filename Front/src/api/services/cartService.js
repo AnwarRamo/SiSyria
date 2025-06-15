@@ -2,25 +2,55 @@ import apiClient from '../config/axiosConfig';
 
 // Add product to cart
 export const addToCart = async (productId) => {
-  return await apiClient.post("/cart/add", { productId });
+  try {
+    const response = await apiClient.post("/cart/add", { productId });
+    return response.data;
+  } catch (error) {
+    console.error('Add to cart error:', error.response?.data || error.message);
+    throw error;
+  }
 };
 
 // Remove product from cart
 export const removeFromCart = async (productId) => {
-  return await apiClient.delete(`/cart/remove/${productId}`);
+  try {
+    const response = await apiClient.delete(`/cart/remove/${productId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Remove from cart error:', error.response?.data || error.message);
+    throw error;
+  }
 };
 
 // Update cart quantity
 export const updateCartQuantity = async (productId, quantity) => {
-  return await apiClient.put(`/cart/update/${productId}`, { quantity });
+  try {
+    const response = await apiClient.put(`/cart/update/${productId}`, { quantity });
+    return response.data;
+  } catch (error) {
+    console.error('Update quantity error:', error.response?.data || error.message);
+    throw error;
+  }
 };
 
 // Checkout cart
 export const checkoutCart = async () => {
-  return await apiClient.post("/cart/checkout");
+  try {
+    const response = await apiClient.post("/cart/checkout");
+    return response.data;
+  } catch (error) {
+    console.error('Checkout error:', error.response?.data || error.message);
+    throw error;
+  }
 };
 
-// Get all products (optional, if not done yet)
+// Get all products
 export const getAllProducts = async () => {
-  return await apiClient.get("/products");
+  try {
+    const response = await apiClient.get("/products");
+    return response.data;
+  } catch (error) {
+    console.error('Get products error:', error.response?.data || error.message);
+    throw error;
+  }
 };
