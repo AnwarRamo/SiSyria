@@ -75,7 +75,7 @@ const ProductCard = React.memo(({
           {quantity > 0 ? (
             <div className="flex items-center justify-end space-x-2">
               <button
-                onClick={() => handleDecreaseQuantity(souvenir._id, quantity)}
+                onClick={() => handleDecreaseQuantity(souvenir._id)}
                 className="bg-[#115d5a]/10 text-[#115d5a] rounded-full w-8 h-8 flex justify-center items-center hover:bg-[#115d5a] hover:text-white transition-colors"
                 aria-label={`Decrease quantity of ${souvenir.name}`}
               >
@@ -142,7 +142,7 @@ const TrendingCard = React.memo(({
         {quantity > 0 ? (
           <div className="flex items-center justify-center space-x-3">
             <button
-              onClick={() => handleDecreaseQuantity(souvenir._id, quantity)}
+              onClick={() => handleDecreaseQuantity(souvenir._id)}
               className="bg-[#115d5a] text-white rounded-full w-8 h-8 flex justify-center items-center hover:bg-[#E7C873] transition-colors"
               aria-label={`Decrease quantity of ${souvenir.name}`}
             >
@@ -259,13 +259,14 @@ function Souvenirs() {
     }
   }, [addToCart]);
 
-  const handleDecreaseQuantity = useCallback((productId, currentQuantity) => {
+  const handleDecreaseQuantity = useCallback((productId) => {
+    const currentQuantity = cartItemMap[productId] || 0;
     if (currentQuantity > 1) {
       updateQty(productId, currentQuantity - 1);
     } else {
       removeFromCart(productId);
     }
-  }, [updateQty, removeFromCart]);
+  }, [cartItemMap, updateQty, removeFromCart]);
 
   // Filter and Sort Logic with memoization
   const filteredSouvenirs = useMemo(() => {
