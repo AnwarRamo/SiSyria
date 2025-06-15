@@ -6,7 +6,7 @@ import { shallow } from 'zustand/shallow';
 import { useAuthStore } from '../api/stores/auth.store';
 
 import Avatar from '../components/ui/Avatar';
-import StatsRadarChart from '../components/ui/StatsRadarChart;';
+import StatsRadarChart from '../components/ui/StatsRadarChart';
 import Navbar from '../layout/Navbar';
 import FullPageSpinner from '../components/LodingSpinner';
 
