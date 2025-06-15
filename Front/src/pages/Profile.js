@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiSettings, FiLogOut, FiGrid, FiHeart } from 'react-icons/fi';
-// BUG FIX: Import the 'shallow' equality checker from Zustand
 import { shallow } from 'zustand/shallow';
 import { useAuthStore } from '../api/stores/auth.store';
 
@@ -12,7 +11,7 @@ import FullPageSpinner from '../components/LodingSpinner';
 
 const PROFILE_BG_IMAGE_URL = '/images/profile-cover.jpg';
 
-// --- Sub-Components for Readability (No changes needed here) ---
+// --- Sub-Components ---
 
 const ProfileHeader = ({ user, onLogout }) => {
   const headerStyle = useMemo(() => ({
@@ -57,63 +56,88 @@ const ProfileHeader = ({ user, onLogout }) => {
 };
 
 const ProfileSidebar = ({ activeTab, setActiveTab }) => {
-    const tabs = useMemo(() => [
-        { id: 'overview', label: 'Overview', icon: FiGrid },
-        { id: 'savedTrips', label: 'Saved Trips', icon: FiHeart },
-        { id: 'settings', label: 'Settings', icon: FiSettings },
-    ], []);
+  const tabs = useMemo(() => [
+    { id: 'overview', label: 'Overview', icon: FiGrid },
+    { id: 'savedTrips', label: 'Saved Trips', icon: FiHeart },
+    { id: 'settings', label: 'Settings', icon: FiSettings },
+  ], []);
 
-    return (
-        <aside className="w-full lg:w-72 lg:flex-shrink-0 lg:sticky lg:top-24 self-start mb-8 lg:mb-0">
-            <nav className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-lg">
-                {tabs.map(tab => (
-                    <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                        className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-lg text-left transition-all group ${
-                            activeTab === tab.id
-                            ? 'bg-gradient-to-r from-[#115d5a] to-[#187a74] text-white shadow-md'
-                            : 'hover:bg-slate-200/70 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'
-                        }`}
-                    >
-                        <tab.icon className="w-5 h-5" />
-                        <span className="font-medium text-sm">{tab.label}</span>
-                    </button>
-                ))}
-            </nav>
-        </aside>
-    );
+  return (
+    <aside className="w-full lg:w-72 lg:flex-shrink-0 lg:sticky lg:top-24 self-start mb-8 lg:mb-0">
+      <nav className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-lg">
+        {tabs.map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-lg text-left transition-all group ${
+              activeTab === tab.id
+                ? 'bg-gradient-to-r from-[#115d5a] to-[#187a74] text-white shadow-md'
+                : 'hover:bg-slate-200/70 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'
+            }`}
+          >
+            <tab.icon className="w-5 h-5" />
+            <span className="font-medium text-sm">{tab.label}</span>
+          </button>
+        ))}
+      </nav>
+    </aside>
+  );
 };
 
 const ProfileContent = ({ activeTab, user, savedTrips }) => {
-    return (
-        <main className="flex-1 min-w-0">
-            <AnimatePresence mode="wait">
-                <motion.div
-                    key={activeTab}
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -15 }}
-                    transition={{ duration: 0.2 }}
-                    className="bg-white dark:bg-slate-800 rounded-xl p-6 sm:p-8 shadow-xl min-h-[400px]"
-                >
-                    {activeTab === 'overview' && <div><h2 className="text-2xl font-semibold">Welcome, {user.displayName}!</h2> <p>This is your account overview.</p> <StatsRadarChart /> </div>}
-                    {activeTab === 'savedTrips' && <div><h2 className="text-2xl font-semibold">Your Saved Trips</h2>{/* Map over savedTrips here */}</div>}
-                    {activeTab === 'settings' && <div><h2 className="text-2xl font-semibold">Settings</h2><p>This section is under development.</p></div>}
-                </motion.div>
-            </AnimatePresence>
-        </main>
-    );
+  return (
+    <main className="flex-1 min-w-0">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -15 }}
+          transition={{ duration: 0.2 }}
+          className="bg-white dark:bg-slate-800 rounded-xl p-6 sm:p-8 shadow-xl min-h-[400px]"
+        >
+          {activeTab === 'overview' && (
+            <div>
+              <h2 className="text-2xl font-semibold">Welcome, {user.displayName || user.username}!</h2>
+              <p>This is your account overview.</p>
+              <StatsRadarChart />
+            </div>
+          )}
+          {activeTab === 'savedTrips' && (
+            <div>
+              <h2 className="text-2xl font-semibold">Your Saved Trips</h2>
+              {savedTrips && savedTrips.length > 0 ? (
+                <ul className="mt-4 space-y-3">
+                  {savedTrips.map((trip) => (
+                    <li key={trip.id} className="border p-4 rounded-md shadow-sm">
+                      <h3 className="font-semibold">{trip.title || trip.name}</h3>
+                      <p className="text-sm text-gray-600">{trip.description || 'No description'}</p>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="mt-4 text-gray-500">You have no saved trips.</p>
+              )}
+            </div>
+          )}
+          {activeTab === 'settings' && (
+            <div>
+              <h2 className="text-2xl font-semibold">Settings</h2>
+              <p>This section is under development.</p>
+            </div>
+          )}
+        </motion.div>
+      </AnimatePresence>
+    </main>
+  );
 };
-
 
 // --- Main Profile Component ---
 
-export const Profile = () => {
-  // BUG FIX: Apply the 'shallow' equality checker to the store hook.
-  // This prevents the component from re-rendering unnecessarily.
+ export const Profile = () => {
+  // Use Zustand store with shallow equality to avoid unnecessary re-renders
   const { user, loading, logout, fetchRegisteredTrips, savedTrips } = useAuthStore(
-    state => ({
+    (state) => ({
       user: state.user,
       loading: state.loading,
       logout: state.logout,
@@ -123,16 +147,16 @@ export const Profile = () => {
     shallow
   );
 
+  // Debug logs to check values (remove in production)
+  // console.log('Profile state:', { user, loading, savedTrips });
+
   const [activeTab, setActiveTab] = useState('overview');
 
   useEffect(() => {
-    // This effect is now safe because 'fetchRegisteredTrips' is a stable reference
-    // thanks to the shallow comparison, and we've specified user.id
-    // as the dependency, which is more stable than the entire user object.
     if (user?.id) {
       fetchRegisteredTrips();
     }
-  }, [user?.id, fetchRegisteredTrips]); // Use a primitive value like user.id for dependency
+  }, [user?.id, fetchRegisteredTrips]);
 
   if (loading && !user) {
     return <FullPageSpinner />;
@@ -140,12 +164,12 @@ export const Profile = () => {
 
   if (!user) {
     return (
-        <div className="flex items-center justify-center h-screen text-center">
-            <div>
-                <h2 className="text-2xl font-semibold">Authentication Error</h2>
-                <p className="text-slate-600 mt-2">Please log in to view your profile.</p>
-            </div>
+      <div className="flex items-center justify-center h-screen text-center">
+        <div>
+          <h2 className="text-2xl font-semibold">Authentication Error</h2>
+          <p className="text-slate-600 mt-2">Please log in to view your profile.</p>
         </div>
+      </div>
     );
   }
 
@@ -155,8 +179,8 @@ export const Profile = () => {
       <ProfileHeader user={user} onLogout={logout} />
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
         <div className="lg:flex lg:gap-8">
-            <ProfileSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
-            <ProfileContent activeTab={activeTab} user={user} savedTrips={savedTrips} />
+          <ProfileSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+          <ProfileContent activeTab={activeTab} user={user} savedTrips={savedTrips} />
         </div>
       </div>
     </div>
