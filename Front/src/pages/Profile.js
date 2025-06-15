@@ -1,38 +1,17 @@
+// Profile.jsx
+
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiSettings, FiLogOut, FiGrid, FiHeart } from 'react-icons/fi';
-// FIX: Import 'shallow' from the correct path for Zustand v4+
 import { shallow } from 'zustand/shallow';
 
-// Note: Assuming these imports are correctly configured in your project
-// import { useAuthStore } from '../api/stores/auth.store';
-// import Avatar from '../components/ui/Avatar';
-// import StatsRadarChart from '../components/ui/StatsRadarChart';
-// import Navbar from '../layout/Navbar';
-// import FullPageSpinner from '../components/LodingSpinner';
+import { useAuthStore } from '../api/stores/auth.store';
+import Avatar from '../components/ui/Avatar';
+import StatsRadarChart from '../components/ui/StatsRadarChart';
+import Navbar from '../layout/Navbar';
+import FullPageSpinner from '../components/LoadingSpinner';
 
-// --- MOCK DATA & SERVICES (for demonstration) ---
-// Replace these with your actual imports and services
 const PROFILE_BG_IMAGE_URL = 'https://placehold.co/1920x400/115d5a/white?text=Profile+Cover';
-
-const useAuthStore = (selector, equalityFn) => {
-    const mockState = {
-        user: { id: 'user123', displayName: 'Jane Doe', username: 'janedoe', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704d' },
-        loading: false,
-        logout: () => console.log('Logged out'),
-        fetchRegisteredTrips: () => console.log('Fetching trips...'),
-        savedTrips: [{id: 1, name: 'Trip to the Mountains'}, {id: 2, name: 'Beach Vacation'}],
-    };
-    // Simulate the selector and equality function behavior
-    const selectedState = selector(mockState);
-    return selectedState;
-};
-
-const Avatar = ({ src, name, size, className }) => <img src={src} alt={name} className={`rounded-full ${size === 'xl' ? 'w-28 h-28 md:w-32 md:h-32' : 'w-12 h-12'} ${className}`} />;
-const StatsRadarChart = () => <div className="p-4 bg-gray-100 rounded-lg text-center text-gray-600">Stats Radar Chart Placeholder</div>;
-const Navbar = () => <nav className="bg-gray-800 text-white p-4 text-center">Navbar Placeholder</nav>;
-const FullPageSpinner = () => <div className="fixed inset-0 flex items-center justify-center bg-white/80 z-50"><div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[#115d5a]"></div></div>;
-// --- END MOCK DATA ---
 
 // --- Sub-Components ---
 
@@ -79,126 +58,115 @@ const ProfileHeader = React.memo(({ user, onLogout }) => {
 });
 
 const ProfileSidebar = React.memo(({ activeTab, setActiveTab }) => {
-    const tabs = useMemo(() => [
-        { id: 'overview', label: 'Overview', icon: FiGrid },
-        { id: 'savedTrips', label: 'Saved Trips', icon: FiHeart },
-        { id: 'settings', label: 'Settings', icon: FiSettings },
-    ], []);
+  const tabs = useMemo(() => [
+    { id: 'overview', label: 'Overview', icon: FiGrid },
+    { id: 'savedTrips', label: 'Saved Trips', icon: FiHeart },
+    { id: 'settings', label: 'Settings', icon: FiSettings },
+  ], []);
 
-    return (
-        <aside className="w-full lg:w-72 lg:flex-shrink-0 lg:sticky lg:top-24 self-start mb-8 lg:mb-0">
-            <nav className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-lg">
-                {tabs.map(tab => (
-                    <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                        className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-lg text-left transition-all group ${
-                            activeTab === tab.id
-                            ? 'bg-gradient-to-r from-[#115d5a] to-[#187a74] text-white shadow-md'
-                            : 'hover:bg-slate-200/70 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'
-                        }`}
-                    >
-                        <tab.icon className="w-5 h-5" />
-                        <span className="font-medium text-sm">{tab.label}</span>
-                    </button>
-                ))}
-            </nav>
-        </aside>
-    );
+  return (
+    <aside className="w-full lg:w-72 lg:flex-shrink-0 lg:sticky lg:top-24 self-start mb-8 lg:mb-0">
+      <nav className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-lg">
+        {tabs.map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-lg text-left transition-all group ${
+              activeTab === tab.id
+              ? 'bg-gradient-to-r from-[#115d5a] to-[#187a74] text-white shadow-md'
+              : 'hover:bg-slate-200/70 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'
+            }`}
+          >
+            <tab.icon className="w-5 h-5" />
+            <span className="font-medium text-sm">{tab.label}</span>
+          </button>
+        ))}
+      </nav>
+    </aside>
+  );
 });
 
 const ProfileContent = React.memo(({ activeTab, user, savedTrips }) => {
-    return (
-        <main className="flex-1 min-w-0">
-            <AnimatePresence mode="wait">
-                <motion.div
-                    key={activeTab}
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -15 }}
-                    transition={{ duration: 0.2 }}
-                    className="bg-white dark:bg-slate-800 rounded-xl p-6 sm:p-8 shadow-xl min-h-[400px]"
-                >
-                    {activeTab === 'overview' && (
-                        <div>
-                            <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">Welcome, {user.displayName}!</h2>
-                            <p className="text-gray-600 dark:text-gray-400 mt-2">This is your account overview. Check out your stats below.</p>
-                            <div className="mt-8">
-                                <StatsRadarChart />
-                            </div>
-                        </div>
-                    )}
-                    {activeTab === 'savedTrips' && (
-                        <div>
-                            <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">Your Saved Trips</h2>
-                            {savedTrips && savedTrips.length > 0 ? (
-                                <ul className="mt-4 space-y-3">
-                                    {savedTrips.map(trip => (
-                                        <li key={trip.id} className="p-4 bg-slate-100 dark:bg-slate-700 rounded-lg">{trip.name}</li>
-                                    ))}
-                                </ul>
-                            ) : (
-                                <p className="text-gray-600 dark:text-gray-400 mt-4">You have no saved trips yet.</p>
-                            )}
-                        </div>
-                    )}
-                    {activeTab === 'settings' && (
-                        <div>
-                            <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">Settings</h2>
-                            <p className="text-gray-600 dark:text-gray-400 mt-4">This section is under development. Thank you for your patience!</p>
-                        </div>
-                    )}
-                </motion.div>
-            </AnimatePresence>
-        </main>
-    );
+  return (
+    <main className="flex-1 min-w-0">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -15 }}
+          transition={{ duration: 0.2 }}
+          className="bg-white dark:bg-slate-800 rounded-xl p-6 sm:p-8 shadow-xl min-h-[400px]"
+        >
+          {activeTab === 'overview' && (
+            <div>
+              <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">Welcome, {user.displayName}!</h2>
+              <p className="text-gray-600 dark:text-gray-400 mt-2">This is your account overview. Check out your stats below.</p>
+              <div className="mt-8">
+                <StatsRadarChart />
+              </div>
+            </div>
+          )}
+          {activeTab === 'savedTrips' && (
+            <div>
+              <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">Your Saved Trips</h2>
+              {savedTrips && savedTrips.length > 0 ? (
+                <ul className="mt-4 space-y-3">
+                  {savedTrips.map(trip => (
+                    <li key={trip.id} className="p-4 bg-slate-100 dark:bg-slate-700 rounded-lg">{trip.name}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-gray-600 dark:text-gray-400 mt-4">You have no saved trips yet.</p>
+              )}
+            </div>
+          )}
+          {activeTab === 'settings' && (
+            <div>
+              <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">Settings</h2>
+              <p className="text-gray-600 dark:text-gray-400 mt-4">This section is under development. Thank you for your patience!</p>
+            </div>
+          )}
+        </motion.div>
+      </AnimatePresence>
+    </main>
+  );
 });
 
-
-// --- Main Profile Component ---
+// --- Main Component ---
 
 function Profile() {
-  // FIX: Using `shallow` prevents re-renders when the store's state object changes
-  // but the selected values (user, loading, etc.) remain the same.
   const { user, loading, logout, fetchRegisteredTrips, savedTrips } = useAuthStore(
     (state) => ({
       user: state.user,
       loading: state.loading,
       logout: state.logout,
-      // FIX: Ensure functions from the store are stable. In Zustand, they are by default.
       fetchRegisteredTrips: state.fetchRegisteredTrips,
       savedTrips: state.savedTrips,
     }),
-    shallow // This is the crucial part.
+    shallow
   );
 
   const [activeTab, setActiveTab] = useState('overview');
-
-  // FIX: `useCallback` ensures `fetchRegisteredTrips` is stable if it were defined here.
-  // Since it's from Zustand, it's already stable, but this is good practice.
   const stableFetchTrips = useCallback(fetchRegisteredTrips, [fetchRegisteredTrips]);
 
   useEffect(() => {
-    // This effect now has stable dependencies. It will only run when `user.id`
-    // changes or when the `stableFetchTrips` function itself changes (which it shouldn't).
     if (user?.id) {
-        stableFetchTrips();
+      stableFetchTrips();
     }
   }, [user?.id, stableFetchTrips]);
 
-  if (loading && !user) {
-    return <FullPageSpinner />;
-  }
+  if (loading && !user) return <FullPageSpinner />;
 
   if (!user) {
     return (
-        <div className="flex items-center justify-center h-screen text-center bg-slate-100 dark:bg-slate-900">
-            <div>
-                <h2 className="text-2xl font-semibold text-slate-800 dark:text-slate-200">Authentication Error</h2>
-                <p className="text-slate-600 dark:text-slate-400 mt-2">Please log in to view your profile.</p>
-                {/* Optional: Add a login button */}
-            </div>
+      <div className="flex items-center justify-center h-screen text-center bg-slate-100 dark:bg-slate-900">
+        <div>
+          <h2 className="text-2xl font-semibold text-slate-800 dark:text-slate-200">Authentication Error</h2>
+          <p className="text-slate-600 dark:text-slate-400 mt-2">Please log in to view your profile.</p>
+          {/* Add a login button or redirect if needed */}
         </div>
+      </div>
     );
   }
 
@@ -208,12 +176,12 @@ function Profile() {
       <ProfileHeader user={user} onLogout={logout} />
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
         <div className="lg:flex lg:gap-8">
-            <ProfileSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
-            <ProfileContent activeTab={activeTab} user={user} savedTrips={savedTrips} />
+          <ProfileSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+          <ProfileContent activeTab={activeTab} user={user} savedTrips={savedTrips} />
         </div>
       </div>
     </div>
   );
-};
+}
 
 export default Profile;
