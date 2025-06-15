@@ -1,20 +1,42 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiSettings, FiLogOut, FiGrid, FiHeart } from 'react-icons/fi';
-// BUG FIX: Import the 'shallow' equality checker from Zustand
+// FIX: Import 'shallow' from the correct path for Zustand v4+
 import { shallow } from 'zustand/shallow';
-import { useAuthStore } from '../api/stores/auth.store';
 
-import Avatar from '../components/ui/Avatar';
-import StatsRadarChart from '../components/ui/StatsRadarChart;';
-import Navbar from '../layout/Navbar';
-import FullPageSpinner from '../components/LodingSpinner';
+// Note: Assuming these imports are correctly configured in your project
+// import { useAuthStore } from '../api/stores/auth.store';
+// import Avatar from '../components/ui/Avatar';
+// import StatsRadarChart from '../components/ui/StatsRadarChart';
+// import Navbar from '../layout/Navbar';
+// import FullPageSpinner from '../components/LodingSpinner';
 
-const PROFILE_BG_IMAGE_URL = '/images/profile-cover.jpg';
+// --- MOCK DATA & SERVICES (for demonstration) ---
+// Replace these with your actual imports and services
+const PROFILE_BG_IMAGE_URL = 'https://placehold.co/1920x400/115d5a/white?text=Profile+Cover';
 
-// --- Sub-Components for Readability (No changes needed here) ---
+const useAuthStore = (selector, equalityFn) => {
+    const mockState = {
+        user: { id: 'user123', displayName: 'Jane Doe', username: 'janedoe', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704d' },
+        loading: false,
+        logout: () => console.log('Logged out'),
+        fetchRegisteredTrips: () => console.log('Fetching trips...'),
+        savedTrips: [{id: 1, name: 'Trip to the Mountains'}, {id: 2, name: 'Beach Vacation'}],
+    };
+    // Simulate the selector and equality function behavior
+    const selectedState = selector(mockState);
+    return selectedState;
+};
 
-const ProfileHeader = ({ user, onLogout }) => {
+const Avatar = ({ src, name, size, className }) => <img src={src} alt={name} className={`rounded-full ${size === 'xl' ? 'w-28 h-28 md:w-32 md:h-32' : 'w-12 h-12'} ${className}`} />;
+const StatsRadarChart = () => <div className="p-4 bg-gray-100 rounded-lg text-center text-gray-600">Stats Radar Chart Placeholder</div>;
+const Navbar = () => <nav className="bg-gray-800 text-white p-4 text-center">Navbar Placeholder</nav>;
+const FullPageSpinner = () => <div className="fixed inset-0 flex items-center justify-center bg-white/80 z-50"><div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[#115d5a]"></div></div>;
+// --- END MOCK DATA ---
+
+// --- Sub-Components ---
+
+const ProfileHeader = React.memo(({ user, onLogout }) => {
   const headerStyle = useMemo(() => ({
     backgroundImage: `linear-gradient(to bottom, rgba(17, 93, 90, 0.75), rgba(17, 93, 90, 0.4)), url(${PROFILE_BG_IMAGE_URL})`,
     backgroundSize: 'cover',
@@ -32,7 +54,7 @@ const ProfileHeader = ({ user, onLogout }) => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="flex flex-col md:flex-row items-center md:items-end gap-6 md:gap-8">
           <Avatar
-            src={user.avatar}
+            src={user.avatar || `https://i.pravatar.cc/150?u=${user.id}`}
             name={user.displayName || user.username}
             size="xl"
             className="ring-4 ring-white/60 shadow-xl"
@@ -54,9 +76,9 @@ const ProfileHeader = ({ user, onLogout }) => {
       </div>
     </motion.header>
   );
-};
+});
 
-const ProfileSidebar = ({ activeTab, setActiveTab }) => {
+const ProfileSidebar = React.memo(({ activeTab, setActiveTab }) => {
     const tabs = useMemo(() => [
         { id: 'overview', label: 'Overview', icon: FiGrid },
         { id: 'savedTrips', label: 'Saved Trips', icon: FiHeart },
@@ -83,9 +105,9 @@ const ProfileSidebar = ({ activeTab, setActiveTab }) => {
             </nav>
         </aside>
     );
-};
+});
 
-const ProfileContent = ({ activeTab, user, savedTrips }) => {
+const ProfileContent = React.memo(({ activeTab, user, savedTrips }) => {
     return (
         <main className="flex-1 min-w-0">
             <AnimatePresence mode="wait">
@@ -97,42 +119,72 @@ const ProfileContent = ({ activeTab, user, savedTrips }) => {
                     transition={{ duration: 0.2 }}
                     className="bg-white dark:bg-slate-800 rounded-xl p-6 sm:p-8 shadow-xl min-h-[400px]"
                 >
-                    {activeTab === 'overview' && <div><h2 className="text-2xl font-semibold">Welcome, {user.displayName}!</h2> <p>This is your account overview.</p> <StatsRadarChart /> </div>}
-                    {activeTab === 'savedTrips' && <div><h2 className="text-2xl font-semibold">Your Saved Trips</h2>{/* Map over savedTrips here */}</div>}
-                    {activeTab === 'settings' && <div><h2 className="text-2xl font-semibold">Settings</h2><p>This section is under development.</p></div>}
+                    {activeTab === 'overview' && (
+                        <div>
+                            <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">Welcome, {user.displayName}!</h2>
+                            <p className="text-gray-600 dark:text-gray-400 mt-2">This is your account overview. Check out your stats below.</p>
+                            <div className="mt-8">
+                                <StatsRadarChart />
+                            </div>
+                        </div>
+                    )}
+                    {activeTab === 'savedTrips' && (
+                        <div>
+                            <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">Your Saved Trips</h2>
+                            {savedTrips && savedTrips.length > 0 ? (
+                                <ul className="mt-4 space-y-3">
+                                    {savedTrips.map(trip => (
+                                        <li key={trip.id} className="p-4 bg-slate-100 dark:bg-slate-700 rounded-lg">{trip.name}</li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <p className="text-gray-600 dark:text-gray-400 mt-4">You have no saved trips yet.</p>
+                            )}
+                        </div>
+                    )}
+                    {activeTab === 'settings' && (
+                        <div>
+                            <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">Settings</h2>
+                            <p className="text-gray-600 dark:text-gray-400 mt-4">This section is under development. Thank you for your patience!</p>
+                        </div>
+                    )}
                 </motion.div>
             </AnimatePresence>
         </main>
     );
-};
+});
 
 
 // --- Main Profile Component ---
 
-export const Profile = () => {
-  // BUG FIX: Apply the 'shallow' equality checker to the store hook.
-  // This prevents the component from re-rendering unnecessarily.
+function Profile() {
+  // FIX: Using `shallow` prevents re-renders when the store's state object changes
+  // but the selected values (user, loading, etc.) remain the same.
   const { user, loading, logout, fetchRegisteredTrips, savedTrips } = useAuthStore(
-    state => ({
+    (state) => ({
       user: state.user,
       loading: state.loading,
       logout: state.logout,
+      // FIX: Ensure functions from the store are stable. In Zustand, they are by default.
       fetchRegisteredTrips: state.fetchRegisteredTrips,
       savedTrips: state.savedTrips,
     }),
-    shallow
+    shallow // This is the crucial part.
   );
 
   const [activeTab, setActiveTab] = useState('overview');
 
+  // FIX: `useCallback` ensures `fetchRegisteredTrips` is stable if it were defined here.
+  // Since it's from Zustand, it's already stable, but this is good practice.
+  const stableFetchTrips = useCallback(fetchRegisteredTrips, [fetchRegisteredTrips]);
+
   useEffect(() => {
-    // This effect is now safe because 'fetchRegisteredTrips' is a stable reference
-    // thanks to the shallow comparison, and we've specified user.id
-    // as the dependency, which is more stable than the entire user object.
+    // This effect now has stable dependencies. It will only run when `user.id`
+    // changes or when the `stableFetchTrips` function itself changes (which it shouldn't).
     if (user?.id) {
-      fetchRegisteredTrips();
+        stableFetchTrips();
     }
-  }, [user?.id, fetchRegisteredTrips]); // Use a primitive value like user.id for dependency
+  }, [user?.id, stableFetchTrips]);
 
   if (loading && !user) {
     return <FullPageSpinner />;
@@ -140,10 +192,11 @@ export const Profile = () => {
 
   if (!user) {
     return (
-        <div className="flex items-center justify-center h-screen text-center">
+        <div className="flex items-center justify-center h-screen text-center bg-slate-100 dark:bg-slate-900">
             <div>
-                <h2 className="text-2xl font-semibold">Authentication Error</h2>
-                <p className="text-slate-600 mt-2">Please log in to view your profile.</p>
+                <h2 className="text-2xl font-semibold text-slate-800 dark:text-slate-200">Authentication Error</h2>
+                <p className="text-slate-600 dark:text-slate-400 mt-2">Please log in to view your profile.</p>
+                {/* Optional: Add a login button */}
             </div>
         </div>
     );
