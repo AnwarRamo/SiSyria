@@ -6,12 +6,21 @@ import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider } from './context/AuthContext';
 
 const App = () => {
-  const hydrate = useAuthStore(state => state.hydrate);
+  const loading = useAuthStore(state => state.loading);
 
   useEffect(() => {
     console.log("App.js: Hydrating auth store...");
-    hydrate();
-  }, [hydrate]);
+    // ✅ استخدم getState().hydrate() بدلًا من تمرير hydrate كمرجع في useEffect
+    useAuthStore.getState().hydrate();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="h-screen flex items-center justify-center text-xl text-[#115d5a]">
+        Loading...
+      </div>
+    );
+  }
 
   return (
     <>
@@ -24,3 +33,4 @@ const App = () => {
 };
 
 export default App;
+ 
