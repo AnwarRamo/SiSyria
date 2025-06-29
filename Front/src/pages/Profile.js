@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiSettings, FiLogOut, FiGrid, FiHeart } from 'react-icons/fi';
-// BUG FIX: Import the 'shallow' equality checker from Zustand
 import { shallow } from 'zustand/shallow';
 import { useAuthStore } from '../api/stores/auth.store';
+import { toast } from 'react-toastify';
 
 import Avatar from '../components/ui/Avatar';
 import StatsRadarChart from '../components/ui/StatsRadarChart;';
@@ -11,8 +11,6 @@ import Navbar from '../layout/Navbar';
 import FullPageSpinner from '../components/LodingSpinner';
 
 const PROFILE_BG_IMAGE_URL = '/images/profile-cover.jpg';
-
-// --- Sub-Components for Readability (No changes needed here) ---
 
 const ProfileHeader = ({ user, onLogout }) => {
   const headerStyle = useMemo(() => ({
@@ -97,42 +95,72 @@ const ProfileContent = ({ activeTab, user, savedTrips }) => {
                     transition={{ duration: 0.2 }}
                     className="bg-white dark:bg-slate-800 rounded-xl p-6 sm:p-8 shadow-xl min-h-[400px]"
                 >
-                    {activeTab === 'overview' && <div><h2 className="text-2xl font-semibold">Welcome, {user.displayName}!</h2> <p>This is your account overview.</p> <StatsRadarChart /> </div>}
-                    {activeTab === 'savedTrips' && <div><h2 className="text-2xl font-semibold">Your Saved Trips</h2>{/* Map over savedTrips here */}</div>}
-                    {activeTab === 'settings' && <div><h2 className="text-2xl font-semibold">Settings</h2><p>This section is under development.</p></div>}
+                    {activeTab === 'overview' && (
+                      <div>
+                        <h2 className="text-2xl font-semibold">Welcome, {user.displayName}!</h2>
+                        <p>This is your account overview.</p>
+                        <StatsRadarChart />
+                      </div>
+                    )}
+                    {activeTab === 'savedTrips' && (
+                      <div>
+                        <h2 className="text-2xl font-semibold">Your Saved Trips</h2>
+                        {savedTrips.length > 0 ? (
+                          <div className="grid grid-cols-1 gap-4 mt-4">
+                            {savedTrips.map(trip => (
+                              <div key={trip._id} className="border rounded-lg p-4">
+                                <h3 className="font-bold">{trip.title}</h3>
+                                <p>{trip.destination}</p>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="mt-4">No saved trips yet.</p>
+                        )}
+                      </div>
+                    )}
+                    {activeTab === 'settings' && (
+                      <div>
+                        <h2 className="text-2xl font-semibold">Settings</h2>
+                        <p>This section is under development.</p>
+                      </div>
+                    )}
                 </motion.div>
             </AnimatePresence>
         </main>
     );
 };
 
-
-// --- Main Profile Component ---
-
 export const Profile = () => {
-  // BUG FIX: Apply the 'shallow' equality checker to the store hook.
-  // This prevents the component from re-rendering unnecessarily.
-  const { user, loading, logout, fetchRegisteredTrips, savedTrips } = useAuthStore(
-    state => ({
-      user: state.user,
-      loading: state.loading,
-      logout: state.logout,
-      fetchRegisteredTrips: state.fetchRegisteredTrips,
-      savedTrips: state.savedTrips,
-    }),
-    shallow
-  );
+  // FIX: Separate Zustand selections
+  const user = useAuthStore(state => state.user);
+  const loading = useAuthStore(state => state.loading);
+  const logout = useAuthStore(state => state.logout);
+  const savedTrips = useAuthStore(state => state.savedTrips);
+  const fetchRegisteredTrips = useAuthStore(state => state.fetchRegisteredTrips, shallow);
 
   const [activeTab, setActiveTab] = useState('overview');
 
+  // FIX: Add proper cleanup and dependency
   useEffect(() => {
-    // This effect is now safe because 'fetchRegisteredTrips' is a stable reference
-    // thanks to the shallow comparison, and we've specified user.id
-    // as the dependency, which is more stable than the entire user object.
-    if (user?.id) {
-      fetchRegisteredTrips();
-    }
-  }, [user?.id, fetchRegisteredTrips]); // Use a primitive value like user.id for dependency
+    const controller = new AbortController();
+    
+    const fetchData = async () => {
+      try {
+        if (user?.id) {
+          await fetchRegisteredTrips(controller.signal);
+        }
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          toast.error('Failed to load saved trips');
+        }
+      }
+    };
+    
+    fetchData();
+    
+    return () => controller.abort();
+  }, [user?.id]);
 
   if (loading && !user) {
     return <FullPageSpinner />;
