@@ -17,7 +17,6 @@ import { getAllProducts } from "../../api/services/cartService";
 import souvenirsBg from "../../assets/images/souvenirs.jpg";
 import des from "../../assets/images/design.png";
 
-// Configuration
 const sortOptions = [
   { label: "From high to low price", value: "price-desc" },
   { label: "From low to high price", value: "price-asc" },
@@ -25,7 +24,6 @@ const sortOptions = [
   { label: "Oldest first", value: "date-asc" },
 ];
 
-// Optimized Product Card with React.memo
 const ProductCard = React.memo(({ 
   souvenir, 
   isLiked, 
@@ -41,22 +39,19 @@ const ProductCard = React.memo(({
         layoutMode === "list" ? "sm:flex-row sm:items-center sm:gap-4" : ""
       }`}
     >
-      {/* Like Button */}
-      <div className="absolute top-3 right-3 cursor-pointer z-10" onClick={() => toggleLike(souvenir._id)}>
+      <div className="absolute top-3 right-3 cursor-pointer z-10" onClick={() => toggleLike(String(souvenir._id))}>
         <FaHeart
           size={22}
           className={`transition-colors duration-300 ${isLiked ? "text-[#115d5a]" : "text-gray-400"} hover:text-[#0d4442]`}
         /> 
       </div>
 
-      {/* Image */}
       <img
         src={souvenir.image || "placeholder.jpg"}
         alt={souvenir.name}
         className={`object-cover rounded-lg ${layoutMode === "list" ? "w-full sm:w-40 sm:h-40 flex-shrink-0" : "w-full h-48"}`}
       />
 
-      {/* Content Area */}
       <div className={`flex flex-col flex-grow ${layoutMode === "list" ? "w-full sm:w-auto pt-4 sm:pt-0" : ""}`}>
         <div className="flex-grow">
           <h3 className="text-[#115d5a] text-lg font-semibold flex justify-between pr-8">
@@ -70,14 +65,12 @@ const ProductCard = React.memo(({
           </p>
         </div>
 
-        {/* Button Section */}
         <div className="mt-auto pt-4">
           {quantity > 0 ? (
             <div className="flex items-center justify-end space-x-2">
               <button
-                onClick={() => handleDecreaseQuantity(souvenir._id, quantity)}
+                onClick={() => handleDecreaseQuantity(String(souvenir._id), quantity)}
                 className="bg-[#115d5a]/10 text-[#115d5a] rounded-full w-8 h-8 flex justify-center items-center hover:bg-[#115d5a] hover:text-white transition-colors"
-                aria-label={`Decrease quantity of ${souvenir.name}`}
               >
                 <FaMinus size={12} />
               </button>
@@ -85,7 +78,6 @@ const ProductCard = React.memo(({
               <button
                 onClick={() => handleAddToCart(souvenir)}
                 className="bg-[#115d5a]/10 text-[#115d5a] rounded-full w-8 h-8 flex justify-center items-center hover:bg-[#115d5a] hover:text-white transition-colors"
-                aria-label={`Increase quantity of ${souvenir.name}`}
               >
                 <FaPlus size={12} />
               </button>
@@ -94,7 +86,6 @@ const ProductCard = React.memo(({
             <button
               onClick={() => handleAddToCart(souvenir)}
               className="w-full flex items-center justify-center space-x-2 rounded bg-[#115d5a] px-4 py-2 text-white transition-colors hover:bg-[#0d4442]"
-              aria-label={`Add ${souvenir.name} to cart`}
             >
               <FaShoppingCart size={16} />
               <span className="text-sm">Add to Cart</span>
@@ -106,7 +97,6 @@ const ProductCard = React.memo(({
   );
 });
 
-// Optimized Trending Card
 const TrendingCard = React.memo(({ 
   souvenir, 
   isLiked, 
@@ -117,18 +107,15 @@ const TrendingCard = React.memo(({
 }) => {
   return (
     <div className="w-80 flex-shrink-0 rounded-lg bg-white p-6 shadow-lg hover:shadow-2xl transition-shadow duration-300 border-2 border-transparent hover:border-[#115d5a] relative flex flex-col">
-      {/* Like Button */}
-      <div className="absolute top-4 right-4 cursor-pointer z-10" onClick={() => toggleLike(souvenir._id)}>
+      <div className="absolute top-4 right-4 cursor-pointer z-10" onClick={() => toggleLike(String(souvenir._id))}>
         <FaHeart
           size={24}
           className={`transition-colors duration-300 ${isLiked ? "text-[#115d5a]" : "text-gray-400"} hover:text-[#0d4442]`}
         /> 
       </div>
 
-      {/* Image */}
       <img src={souvenir.image || "placeholder.jpg"} alt={souvenir.name} className="mb-4 h-48 w-full rounded-t-lg object-cover" />
 
-      {/* Details */}
       <div className="flex-grow">
         <h3 className="mb-2 flex justify-between text-xl font-semibold text-[#115d5a]">
           <span>{souvenir.name}</span>
@@ -137,14 +124,12 @@ const TrendingCard = React.memo(({
         <p className="mb-4 text-gray-600 text-sm h-10 overflow-hidden">{souvenir.description || "No details available."}</p>
       </div>
 
-      {/* Button Section */}
       <div className="mt-auto pt-4">
         {quantity > 0 ? (
           <div className="flex items-center justify-center space-x-3">
             <button
-              onClick={() => handleDecreaseQuantity(souvenir._id, quantity)}
+              onClick={() => handleDecreaseQuantity(String(souvenir._id), quantity)}
               className="bg-[#115d5a] text-white rounded-full w-8 h-8 flex justify-center items-center hover:bg-[#E7C873] transition-colors"
-              aria-label={`Decrease quantity of ${souvenir.name}`}
             >
               <FaMinus size={12} />
             </button>
@@ -152,7 +137,6 @@ const TrendingCard = React.memo(({
             <button
               onClick={() => handleAddToCart(souvenir)}
               className="bg-[#115d5a] text-white rounded-full w-8 h-8 flex justify-center items-center hover:bg-[#E7C873] transition-colors"
-              aria-label={`Increase quantity of ${souvenir.name}`}
             >
               <FaPlus size={12} />
             </button>
@@ -161,7 +145,6 @@ const TrendingCard = React.memo(({
           <button
             onClick={() => handleAddToCart(souvenir)}
             className="w-full flex items-center justify-center space-x-2 rounded bg-[#115d5a] px-4 py-2 text-white transition-colors hover:bg-[#0d4442]"
-            aria-label={`Add ${souvenir.name} to cart`}
           >
             <FaShoppingCart size={16} />
             <span>Add to Cart</span>
@@ -173,7 +156,6 @@ const TrendingCard = React.memo(({
 });
 
 function Souvenirs() {
-  // State
   const [souvenirs, setSouvenirs] = useState([]);
   const [likedCards, setLikedCards] = useState({});
   const [searchText, setSearchText] = useState("");
@@ -186,39 +168,41 @@ function Souvenirs() {
   const scrollRef = useRef(null);
   const scrollIntervalRef = useRef(null);
 
-  // Zustand Cart Store
   const cartItems = useCartStore((state) => state.items);
   const addToCart = useCartStore((state) => state.addToCart);
   const updateQty = useCartStore((state) => state.updateCartQuantity);
   const removeFromCart = useCartStore((state) => state.removeFromCart);
 
-  // Optimized cart item lookup
   const cartItemMap = useMemo(() => {
     const map = {};
     cartItems.forEach(item => {
-      map[item.product._id] = item.quantity;
+      map[String(item.product._id)] = item.quantity;
     });
     return map;
   }, [cartItems]);
 
-  // Fetch Data
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setIsLoading(true);
-        const response = await getAllProducts();
-        setSouvenirs(response.data?.products || []);
-      } catch (err) {
-        console.error("Failed to fetch products:", err);
-        setSouvenirs([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchProducts();
-  }, []);
+useEffect(() => {
+  const fetchProducts = async () => {
+    try {
+      setIsLoading(true);
+      const response = await getAllProducts();
+      const fixedProducts = response.data?.products.map((product) => ({
+        ...product,
+        _id: product._id?.$oid || product._id
+      }));
+      setSouvenirs(fixedProducts || []);
+    } catch (err) {
+      console.error("Failed to fetch products:", err);
+      setSouvenirs([]); // ⚠️ هذا قد يسبب تحديث متكرر في useMemo إن كان فيه شرط على `souvenirs`
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  fetchProducts();
+}, []); // ✅ هذا جيد
 
-  // Auto Scroll Logic with cleanup
+
+
   useEffect(() => {
     if (isLoading || souvenirs.length === 0) return;
     
@@ -234,7 +218,7 @@ function Souvenirs() {
             scrollRef.current.scrollLeft += 1;
           }
         }
-      }, 50); // Reduced frequency for better performance
+      }, 50);
     };
     
     startAutoScroll();
@@ -246,7 +230,6 @@ function Souvenirs() {
     };
   }, [isPaused, isLoading, souvenirs]);
 
-  // Optimized event handlers
   const toggleLike = useCallback((id) => {
     setLikedCards((prev) => ({ ...prev, [id]: !prev[id] }));
   }, []);
@@ -254,8 +237,6 @@ function Souvenirs() {
   const handleAddToCart = useCallback((souvenir) => {
     if (souvenir?._id) {
       addToCart(souvenir);
-    } else {
-      console.error("Attempted to add invalid souvenir to cart:", souvenir);
     }
   }, [addToCart]);
 
@@ -267,7 +248,6 @@ function Souvenirs() {
     }
   }, [updateQty, removeFromCart]);
 
-  // Filter and Sort Logic with memoization
   const filteredSouvenirs = useMemo(() => {
     return souvenirs.filter((s) => 
       s.name.toLowerCase().includes(searchText.toLowerCase())
@@ -301,7 +281,6 @@ function Souvenirs() {
 
   return (
     <div className="bg-gray-100">
-      {/* Header Section */}
       <div className="relative h-[500px]">
         <NavBar />
         <div
@@ -315,7 +294,6 @@ function Souvenirs() {
         </div>
       </div>
 
-      {/* Trending Section */}
       <section className="mt-20 px-4">
         <h2 className="text-center text-4xl font-bold text-[#115d5a]">Trending Souvenirs</h2>
         <div className="flex justify-center mt-4">
@@ -329,33 +307,29 @@ function Souvenirs() {
         >
           {souvenirs.slice(0, 8).map((s) => (
             <TrendingCard
-              key={s._id}
+              key={String(s._id)}
               souvenir={s}
-              isLiked={!!likedCards[s._id]}
+              isLiked={!!likedCards[String(s._id)]}
               toggleLike={toggleLike}
               handleAddToCart={handleAddToCart}
               handleDecreaseQuantity={handleDecreaseQuantity}
-              quantity={cartItemMap[s._id] || 0}
+              quantity={cartItemMap[String(s._id)] || 0}
             />
           ))}
         </div>
       </section>
 
-      {/* New Arrivals Section */}
       <section className="mt-10 px-4">
         <h2 className="text-center text-3xl font-bold text-teal-800">New Arrivals</h2>
         <div className="flex justify-center mt-4">
           <img src={des} alt="Decoration" className="h-auto w-52" />
         </div>
 
-        {/* Controls: View, Search, Sort */}
         <div className="flex flex-wrap justify-between items-center w-full p-4 mt-10 gap-4 bg-white/80 rounded-lg">
-          {/* View Options */}
           <div className="flex space-x-2 px-4">
             <button
               className={`p-2 rounded hover:bg-gray-100 ${layoutMode === "grid" ? "bg-gray-200" : ""}`}
               onClick={() => setLayoutMode("grid")}
-              aria-label="Grid View"
             >
               <BsFillGrid3X3GapFill
                 size={28}
@@ -365,7 +339,6 @@ function Souvenirs() {
             <button
               className={`p-2 rounded hover:bg-gray-100 ${layoutMode === "list" ? "bg-gray-200" : ""}`}
               onClick={() => setLayoutMode("list")}
-              aria-label="List View"
             >
               <FaThList
                 size={26}
@@ -374,7 +347,6 @@ function Souvenirs() {
             </button>
           </div>
 
-          {/* Search and Sort */}
           <div className="flex items-center space-x-3">
             <div className="flex items-center">
               <div
@@ -423,7 +395,6 @@ function Souvenirs() {
           </div>
         </div>
 
-        {/* Product Display */}
         <div
           className={`py-8 px-4 grid gap-6 ${
             layoutMode === "grid" ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4" : "grid-cols-1 md:grid-cols-2"
@@ -432,13 +403,13 @@ function Souvenirs() {
           {sortedSouvenirs.length > 0 ? (
             sortedSouvenirs.map((s) => (
               <ProductCard
-                key={s._id}
+                key={String(s._id)}
                 souvenir={s}
-                isLiked={!!likedCards[s._id]}
+                isLiked={!!likedCards[String(s._id)]}
                 toggleLike={toggleLike}
                 handleAddToCart={handleAddToCart}
                 handleDecreaseQuantity={handleDecreaseQuantity}
-                quantity={cartItemMap[s._id] || 0}
+                quantity={cartItemMap[String(s._id)] || 0}
                 layoutMode={layoutMode}
               />
             ))
