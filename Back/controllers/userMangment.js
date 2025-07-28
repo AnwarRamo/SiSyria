@@ -161,3 +161,24 @@ export const getAllUsers = async (req, res) => {
     res.status(500).json({ code: 'FETCH_FAILED', message: error.message });
   }
 };
+
+export const promoteToAdmin = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ code: 'ADMIN_REQUIRED' });
+    }
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { role: 'admin' },
+      { new: true }
+    ).select('-hashedPassword -__v');
+    if (!user) {
+      return res.status(404).json({ code: 'USER_NOT_FOUND' });
+    }
+    res.json({ code: 'USER_PROMOTED', user });
+  } catch (error) {
+    console.error('Promote to admin error:', error);
+    res.status(500).json({ code: 'PROMOTE_FAILED', message: error.message });
+  }
+};

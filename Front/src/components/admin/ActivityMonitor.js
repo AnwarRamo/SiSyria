@@ -1,17 +1,23 @@
-import React,{useState,useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 
 const ActivityMonitor = ({ lastActive }) => {
-  const calculateTimeLeft = () => {
-    const difference = Date.now() - lastActive;
-    const minutesLeft = 15 - Math.floor(difference / 60000);
-    return Math.max(minutesLeft, 0);
-  };
-
-  const [minutesLeft, setMinutesLeft] = useState(calculateTimeLeft());
+  const [minutesLeft, setMinutesLeft] = useState(15);
 
   useEffect(() => {
+    const calculateTimeLeft = () => {
+      const difference = Date.now() - lastActive;
+      const minutes = 15 - Math.floor(difference / 60000);
+      return Math.max(minutes, 0);
+    };
+
+    setMinutesLeft(calculateTimeLeft());
+    
     const timer = setInterval(() => {
-      setMinutesLeft(calculateTimeLeft());
+      setMinutesLeft(prev => {
+        const newValue = calculateTimeLeft();
+        if (newValue <= 0) clearInterval(timer);
+        return newValue;
+      });
     }, 60000);
 
     return () => clearInterval(timer);

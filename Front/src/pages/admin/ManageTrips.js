@@ -10,23 +10,48 @@ import { FiMapPin, FiCalendar, FiClock, FiDollarSign, FiStar } from 'react-icons
 const ManageTrips = () => {
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
+    let isMounted = true;
     const controller = new AbortController();
 
     const fetchTrips = async () => {
       try {
+        
+        
+        
+        
+        // Now try the AdminService
         const data = await AdminService.getAllTrips(controller.signal);
-        setTrips(data);
-      } catch (err) {
-        toast.error(err?.message || 'An error occurred while fetching trips.');
+        console.log('AdminService result:', data);
+        
+        if (isMounted) {
+          setTrips(Array.isArray(data) ? data : []);
+          setError(null);
+        }
+              } catch (err) {
+          if (isMounted) {
+            if (err.name === 'AbortError' || err.message === 'canceled' || err.message.includes('canceled')) {
+              return; // Don't show error for canceled requests
+            }
+          
+          setError(err?.message || 'An error occurred while fetching trips.');
+          toast.error(err?.message || 'An error occurred while fetching trips.');
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchTrips();
-    return () => controller.abort();
+
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
   }, []);
 
   const formatTripDate = (date) => {
@@ -38,6 +63,26 @@ const ManageTrips = () => {
       return 'Invalid date';
     }
   };
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 p-8 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4">❌</div>
+          <h2 className="text-2xl font-semibold text-gray-600 mb-4">
+            Error loading trips
+          </h2>
+          <p className="text-gray-500 mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 p-8">
@@ -69,7 +114,11 @@ const ManageTrips = () => {
               <Card className="rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 h-full flex flex-col bg-white/90 backdrop-blur-sm overflow-hidden">
                 <div className="relative h-48">
                   <img 
-                    src={trip.images || 'https://source.unsplash.com/random/800x600?travel'}
+                    src={
+                      Array.isArray(trip.images)
+                        ? trip.images[0] || 'https://source.unsplash.com/random/800x600?travel'
+                        : trip.images || 'https://source.unsplash.com/random/800x600?travel'
+                    }
                     alt={trip.title}
                     className="w-full h-full object-cover"
                     onError={(e) => {
@@ -105,7 +154,7 @@ const ManageTrips = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
                         <FiClock className="mr-2 text-purple-500" />
-                        <span>{trip.duration} days</span>
+                        <span>{trip.days || trip.duration} days</span>
                       </div>
                       <div className="flex items-center">
                         <FiDollarSign className="mr-2 text-purple-500" />

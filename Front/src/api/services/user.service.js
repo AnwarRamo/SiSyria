@@ -1,9 +1,10 @@
 import apiClient from '../config/axiosConfig';
+import { ENDPOINTS } from '../config/endpoints';
 
 export const UserService = {
   getProfile: async (username) => {
     try {
-      const response = await apiClient.get(`/users/${username}`);
+      const response = await apiClient.get(ENDPOINTS.USERS.BY_ID(username));
       return response.data;
     } catch (error) {
       throw error.response?.data || {
@@ -15,7 +16,7 @@ export const UserService = {
 
   updateProfile: async (data) => {
     try {
-      const response = await apiClient.put('/me', data);
+      const response = await apiClient.put(ENDPOINTS.AUTH.ME, data);
       return response.data;
     } catch (error) {
       throw error.response?.data || {
@@ -25,9 +26,21 @@ export const UserService = {
     }
   },
 
+  updatePersonalInfo: async (personalData) => {
+    try {
+      const response = await apiClient.put(ENDPOINTS.AUTH.ME, personalData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || {
+        code: 'UPDATE_PERSONAL_INFO_ERROR',
+        message: 'Personal information update failed'
+      };
+    }
+  },
+
   followUser: async (username) => {
     try {
-      const response = await apiClient.put(`/follow/${username}`);
+      const response = await apiClient.put(ENDPOINTS.USERS.FOLLOW(username));
       return response.data;
     } catch (error) {
       throw error.response?.data || {
@@ -37,21 +50,10 @@ export const UserService = {
     }
   },
 
-  getPublicTrips: async () => {
-    try {
-      const response = await apiClient.get('/trips');
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || {
-        code: 'TRIPS_ERROR',
-        message: 'Failed to load trips'
-      };
-    }
-  },
-
+  // Admin user management
   addUser: async (userData) => {
     try {
-      const response = await apiClient.post('/admin/users', userData);
+      const response = await apiClient.post(`${ENDPOINTS.ADMIN.BASE}/users`, userData);
       return response.data.user;
     } catch (error) {
       throw error.response?.data || {
@@ -63,23 +65,19 @@ export const UserService = {
 
   updateUser: async (userId, userData) => {
     try {
-      console.log("Sending update for userId:", userId); 
-      const response = await apiClient.put(`/admin/users/${userId}`, userData);
+      const response = await apiClient.put(`${ENDPOINTS.ADMIN.BASE}/users/${userId}`, userData);
       return response.data;
     } catch (error) {
-      console.error("Update error:", error);  
       throw error.response?.data || {
         code: 'UPDATE_USER_ERROR',
         message: 'Failed to update user'
       };
     }
   },
-  
 
- 
   getAllUsers: async (params = {}, signal) => {
     try {
-      const response = await apiClient.get('/admin/users', { params, signal });
+      const response = await apiClient.get(`${ENDPOINTS.ADMIN.BASE}/users`, { params, signal });
       return response.data;
     } catch (error) {
       throw error.response?.data || {
@@ -88,11 +86,10 @@ export const UserService = {
       };
     }
   },
-  
 
   deleteUser: async (userId) => {
     try {
-      const response = await apiClient.delete(`/admin/users/${userId}`);
+      const response = await apiClient.delete(`${ENDPOINTS.ADMIN.BASE}/users/${userId}`);
       return response.data;
     } catch (error) {
       throw error.response?.data || {

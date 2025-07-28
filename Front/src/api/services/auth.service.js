@@ -1,52 +1,34 @@
-// src/api/services/auth.service.js
-import apiClient from '../config/axiosConfig';
+import apiClient from "../config/axiosConfig";
+import { ENDPOINTS } from "../config/endpoints";
 
 export const AuthService = {
-  login: async (credentials) => {
-    try {
-      const response = await apiClient.post('/auth/login', credentials);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || {
-        code: 'LOGIN_FAILED',
-        message: error.message || 'Login failed',
-      };
-    }
-  },
-
+  login: (credentials) => apiClient.post(ENDPOINTS.AUTH.LOGIN, credentials),
   register: async (userData) => {
     try {
-      const response = await apiClient.post('/auth/register', userData);
-      return response.data;
+      return await apiClient.post(ENDPOINTS.AUTH.REGISTER, userData);
     } catch (error) {
-      throw error.response?.data || {
-        code: 'REGISTRATION_FAILED',
-        message: 'Registration failed'
-      };
+      console.log('Auth service register error:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message,
+        fullError: error
+      });
+      throw error;
     }
   },
-
+  logout: () => apiClient.post(ENDPOINTS.AUTH.LOGOUT),
   getCurrentUser: async () => {
     try {
-      const response = await apiClient.get('/auth/me');
-      return response.data;
-    } catch (error) {
-      if (error.response?.status === 401) return null;
-      throw error.response?.data || {
-        code: 'FETCH_USER_FAILED',
-        message: 'Failed to fetch current user'
-      };
+      return await apiClient.get(ENDPOINTS.AUTH.ME);
+    } catch (err) {
+      if (err.response && err.response.status === 401) {
+        // Not logged in, return null and do not log error
+        return null;
+      }
+      // Log unexpected errors
+      console.error('getCurrentUser error:', err);
+      return null;
     }
   },
-
-  logout: async () => {
-    try {
-      await apiClient.post('/auth/logout');
-    } catch (error) {
-      throw error.response?.data || {
-        code: 'LOGOUT_FAILED',
-        message: 'Logout failed'
-      };
-    }
-  }
+  refreshToken: () => apiClient.post(ENDPOINTS.AUTH.REFRESH),
 };

@@ -17,6 +17,6 @@ const dev = {
     googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
   },
 };
-console.log("JWT_ACCESS_TOKEN_KEY:", dev.app.jwtAccessTokenKey); // Debugging output
+
 
 module.exports = dev;

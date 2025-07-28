@@ -17,7 +17,7 @@ const UserTable = () => {
         setUsers(res.data);
         setLoading(false);
       } catch (error) {
-        console.error(error);
+        // Optionally, set an error state here if you want to display an error to the user
       }
     };
 

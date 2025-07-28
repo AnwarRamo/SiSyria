@@ -1,122 +1,153 @@
-// src/components/user/TripCard.jsx
-import React from 'react';
-import { FaMapMarkerAlt, FaPlusCircle, FaCheckCircle, FaInfoCircle } from 'react-icons/fa';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { FiMapPin, FiCalendar, FiClock, FiStar } from 'react-icons/fi';
+import CountdownTimer from './CountdownTimer';
 
-const TripCard = ({ trip, onAddToProfile, isSaved, showAddToProfileButton = true, onLearnMore }) => {
-  // Add console.log here to see when TripCard re-renders and with what props
-  // console.log(`[TripCard] Rendering: ${trip?.title}`, { isSaved, onAddToProfile });
-
-  const cardVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
-    hover: { scale: 1.03, boxShadow: "0px 10px 20px rgba(0,0,0,0.1)" }
-  };
-
+const TripCard = ({ trip, userRegistration, isLoading, onToggleRegister, onViewDetails }) => {
   if (!trip) {
     return (
-      <motion.div variants={cardVariants} className="p-5 text-center text-slate-500">
-        Trip data unavailable.
-      </motion.div>
+      <div className="bg-white/80 rounded-3xl shadow-2xl p-8 flex items-center justify-center min-h-[200px] text-red-600 font-bold">
+        Trip data unavailable
+      </div>
     );
   }
-  
-  const handleLearnMoreClick = (e) => {
-    e.stopPropagation();
-    if (onLearnMore) {
-      onLearnMore(trip.id || trip._id);
+
+  // Now it's safe to access trip.images and other trip properties
+  const [showStatus, setShowStatus] = useState(false);
+  const firstImage = trip.images?.[0] || null;
+
+  useEffect(() => {
+    if (userRegistration?.status) {
+      setShowStatus(true);
+      const timer = setTimeout(() => setShowStatus(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [userRegistration]);
+
+  const renderStatus = () => {
+    if (!userRegistration) return null;
+    switch(userRegistration.status) {
+      case 'pending':
+        return (
+          <motion.div
+            className="mt-2 p-2 bg-amber-100 rounded-lg text-center"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+          >
+            <span className="text-amber-800 font-medium">⏳ Pending Approval</span>
+          </motion.div>
+        );
+      case 'rejected':
+        return (
+          <motion.div
+            className="mt-2 p-2 bg-red-100 rounded-lg text-center"
+            initial={{ scale: 0.8 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", stiffness: 300 }}
+          >
+            <span className="text-red-700 font-medium">
+              ❌ Trip is full, please choose another trip
+            </span>
+          </motion.div>
+        );
+      case 'approved':
+        return <CountdownTimer startDate={trip.startDate} />;
+      default:
+        return null;
     }
   };
-
-  const handleAddToProfileClick = (e) => {
-    e.stopPropagation();
-    if (onAddToProfile) {
-      onAddToProfile(trip);
-    }
-  };
-
-  // CRITICAL: If you have any useEffect hooks in TripCard,
-  // ensure their dependency arrays are correct and they don't
-  // unconditionally call onAddToProfile or another state-setting function.
-  // Example of a BAD effect:
-  // useEffect(() => {
-  //   if (isSaved) { onAddToProfile(trip); } // This could loop if onAddToProfile changes and isSaved is true
-  // }, [isSaved, onAddToProfile, trip]);
 
   return (
     <motion.div
-      variants={cardVariants}
-      whileHover="hover"
-      className="bg-white dark:bg-slate-800 rounded-xl shadow-lg overflow-hidden transition-all duration-300 ease-in-out flex flex-col group"
+      className="relative bg-white/80 backdrop-blur-lg rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-[#E7C873] hover:shadow-amber-200 transition-all duration-300 group"
+      layout
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -8, scale: 1.03 }}
+      transition={{ duration: 0.3 }}
     >
-      <div className="relative h-52 overflow-hidden">
+      {/* Featured badge */}
+      {trip.featured && (
+        <div className="absolute top-4 left-4 bg-[#E7C873] text-[#115d5a] px-3 py-1 rounded-full text-xs font-bold flex items-center z-10 shadow">
+          <FiStar className="mr-1" /> Featured
+        </div>
+      )}
+      {/* Trip image */}
+      {firstImage ? (
         <img
-          src={trip.images?.[0] || '/placeholder-trip.jpg'}
-          alt={trip.title || 'Trip Image'}
-          className="w-full h-full object-cover transform transition-transform duration-500 group-hover:scale-110"
+          src={firstImage}
+          alt={trip.title}
+          className="w-full h-52 object-cover object-center transition-transform duration-500 group-hover:scale-105"
+          loading="lazy"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-        <div className="absolute bottom-0 left-0 p-4">
-          <h3 className="text-xl font-semibold text-white shadow-sm drop-shadow-md">{trip.title || 'Untitled Trip'}</h3>
-          {trip.destination && (
-            <div className="flex items-center mt-1 text-slate-200 text-sm">
-              <FaMapMarkerAlt className="mr-1.5 h-4 w-4 flex-shrink-0" />
-              <span>{trip.destination}</span>
-            </div>
+      ) : (
+        <div className="w-full h-52 bg-gradient-to-r from-[#115d5a] to-[#E7C873] flex items-center justify-center">
+          <span className="text-white font-bold">No image available</span>
+        </div>
+      )}
+      {/* Card content */}
+      <div className="p-6 flex flex-col flex-grow">
+        <div className="flex justify-between items-center mb-2">
+          <h3 className="text-2xl font-extrabold text-[#115d5a] truncate">{trip.title}</h3>
+          <div className="bg-[#E7C873] text-[#115d5a] px-4 py-1 rounded-full text-base font-bold shadow">
+            ${trip.price}
+          </div>
+        </div>
+        <div className="flex items-center gap-3 mb-2 text-sm text-[#115d5a] font-medium">
+          <FiMapPin className="inline mr-1" />
+          <span>{trip.destination}</span>
+          <FiCalendar className="inline ml-3 mr-1" />
+          <span>{trip.startDate ? new Date(trip.startDate).toLocaleDateString() : 'TBA'}</span>
+          {trip.duration && (
+            <><FiClock className="inline ml-3 mr-1" /><span>{trip.duration} days</span></>
           )}
         </div>
-      </div>
-
-      <div className="p-5 flex flex-col flex-grow">
-        {trip.description && (
-          <p className="text-sm text-slate-600 dark:text-slate-400 mb-4 line-clamp-3 flex-grow">
-            {trip.description}
-          </p>
-        )}
-        
-        <div className="mt-auto">
-          <div className="flex justify-between items-center mb-3">
-            {trip.price !== undefined && trip.price !== null ? (
-              <span className="text-xl font-bold text-indigo-600 dark:text-indigo-400">
-                ${Number(trip.price).toLocaleString()}
-              </span>
+        <p className="text-gray-700 text-sm mb-3 line-clamp-3 flex-grow">
+          {trip.description || 'No description available'}
+        </p>
+        <div className="flex flex-wrap gap-2 mb-4">
+          {(trip.highlights || []).slice(0, 4).map((highlight, idx) => (
+            <span key={idx} className="bg-[#115d5a]/10 text-[#115d5a] px-3 py-1 rounded-full text-xs font-semibold border border-[#E7C873]">
+              {highlight}
+            </span>
+          ))}
+        </div>
+        {showStatus && renderStatus()}
+        <div className="mt-auto flex flex-col gap-3">
+          <button
+            onClick={() => onViewDetails(trip._id)}
+            className="w-full py-2 px-4 rounded-xl text-white font-bold bg-[#115d5a] hover:bg-[#0d4a47] transition-all duration-300 shadow-md"
+          >
+            View Details
+          </button>
+          <button
+            disabled={isLoading || userRegistration?.status === 'approved'}
+            onClick={() => onToggleRegister(trip._id)}
+            className={`w-full py-2 px-4 rounded-xl font-bold transition-all duration-300 shadow-md
+              ${isLoading
+                ? 'bg-gray-400 text-white cursor-not-allowed'
+                : userRegistration?.status === 'approved'
+                ? 'bg-green-600 text-white cursor-default'
+                : userRegistration
+                ? 'bg-[#E7C873] text-[#115d5a] hover:bg-yellow-400'
+                : 'bg-gradient-to-r from-[#115d5a] to-[#1a7c78] text-white hover:from-[#0d4a47] hover:to-[#115d5a]'}
+            `}
+          >
+            {isLoading ? (
+              <span className="animate-spin inline-block mr-2 align-middle">⏳</span>
+            ) : userRegistration?.status === 'approved' ? (
+              '✓ Approved'
+            ) : userRegistration ? (
+              'Registered'
             ) : (
-               <span className="text-sm text-slate-500 dark:text-slate-400">Price N/A</span>
+              'Register Now'
             )}
-            {trip.duration && (
-              <span className="text-xs text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-full">
-                {trip.duration} Days
-              </span>
-            )}
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-3 pt-3 border-t border-slate-200 dark:border-slate-700">
-            <button
-              type="button"
-              onClick={handleLearnMoreClick}
-              className="flex-1 w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg text-sm transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 flex items-center justify-center gap-2"
-            >
-              <FaInfoCircle /> Learn More
-            </button>
-            {showAddToProfileButton && onAddToProfile && (
-              <button
-                type="button"
-                onClick={handleAddToProfileClick}
-                className={`flex-1 w-full sm:w-auto flex items-center justify-center gap-2 py-2 px-4 rounded-lg font-semibold text-sm transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                  isSaved
-                    ? "bg-green-600 dark:bg-green-700 text-white hover:bg-green-700 dark:hover:bg-green-800 focus:ring-green-500"
-                    : "bg-slate-200 hover:bg-slate-300 dark:bg-slate-600 dark:hover:bg-slate-500 text-slate-700 dark:text-slate-200 focus:ring-slate-500"
-                }`}
-              >
-                {isSaved ? <FaCheckCircle /> : <FaPlusCircle />}
-                {isSaved ? "Saved" : "Save Trip"} 
-              </button>
-            )}
-          </div>
+          </button>
         </div>
       </div>
     </motion.div>
   );
 };
 
-export default React.memo(TripCard);
+export default TripCard;

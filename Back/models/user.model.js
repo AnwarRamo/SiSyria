@@ -85,6 +85,16 @@ const userSchema = new mongoose.Schema({
     trim: true,
     maxlength: 50,
   },
+  phone: {
+    type: String,
+    trim: true,
+    maxlength: 20,
+  },
+  nationalId: {
+    type: String,
+    trim: true,
+    maxlength: 20,
+  },
   avatar: String,
   role: {
     type: String,

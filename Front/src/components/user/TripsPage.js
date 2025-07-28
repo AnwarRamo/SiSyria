@@ -39,12 +39,10 @@ export const TripsPage = () => { // Keep export as TripsPage if that's how you u
       setError(null);
       try {
         const response = await TripService.getAllTrips();
-        console.log(`[Travel.js] Fetched ${response?.length || 0} trips from service.`);
         setTrips(response || []);
       } catch (err) {
         const errorMessage = err.message || "Failed to load trips";
         setError(errorMessage);
-        console.error("[Travel.js] Failed to load trips:", err);
       } finally {
         setLoading(false);
       }

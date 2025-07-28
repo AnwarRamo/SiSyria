@@ -25,6 +25,8 @@ const CartModal = ({ onClose }) => {
   const handleCheckout = async () => {
     if (!user || !user.id) {
       toast.error("Please log in to proceed with checkout.");
+      // Optionally redirect to login page
+      // window.location.href = '/login';
       return;
     }
     if (!items || items.length === 0) {
@@ -57,13 +59,12 @@ const CartModal = ({ onClose }) => {
       handleClose(); // Close the modal
 
     } catch (error) {
-      console.error("Checkout error:", error);
       toast.error(error.message || "Checkout failed. Please try again.");
     } finally {
       setIsCheckingOut(false);
     }
   };
-    console.log("CartModal - User from useAuthStore on checkout:", user);
+
 
   const numericalTotalPrice = totalPrice ? totalPrice() : 0;
 
@@ -73,14 +74,14 @@ const CartModal = ({ onClose }) => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-gradient-to-br from-black/70 to-purple-900/70 backdrop-blur-sm flex items-center justify-center z-50"
+        className="fixed inset-0 flex items-center justify-center z-50 bg-black/40 backdrop-blur-[6px] p-4"
         onClick={handleBackdropClick}
       >
         <motion.div
-          initial={{ scale: 0.8, y: 50 }}
+          initial={{ scale: 0.96, y: 30 }}
           animate={{ scale: 1, y: 0 }}
-          exit={{ scale: 0.8, y: 50 }}
-          className="bg-white/10 backdrop-blur-lg p-6 sm:p-8 rounded-2xl shadow-2xl w-full max-w-md border border-white/20"
+          exit={{ scale: 0.96, y: 30 }}
+          className="bg-white/80 dark:bg-[#0a192f]/80 mt-[42rem] backdrop-blur-2xl p-8 rounded-3xl shadow-2xl w-full max-w-lg border border-[#E7C873] flex flex-col"
         >
           {(!items || items.length === 0) ? (
             <div className="text-center">
@@ -105,36 +106,44 @@ const CartModal = ({ onClose }) => {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 20, transition: { duration: 0.2 } }}
-                    className="flex justify-between items-center bg-white/5 p-3 rounded-lg"
+                    className="flex flex-col sm:flex-row justify-between items-center bg-white/70 dark:bg-[#0a192f]/80 backdrop-blur-xl p-4 rounded-2xl shadow-md border border-[#E7C873] mb-2"
                   >
-                    <div className="flex items-center space-x-3">
+                    <div className="flex items-center space-x-3 w-full sm:w-auto">
                       <img
                         src={item.product.image || 'https://via.placeholder.com/80'} // Fallback image
                         alt={item.product.name}
-                        className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-lg border border-white/10"
+                        className="w-20 h-20 object-cover rounded-xl border border-[#E7C873]/30"
                       />
-                      <div>
-                        <h3 className="text-md sm:text-lg font-semibold text-white">{item.product.name}</h3>
-                        <p className="text-teal-300 text-sm sm:text-base">${item.product.price.toFixed(2)}</p>
+                      <div className="text-left">
+                        <h3 className="text-lg font-extrabold text-[#115d5a] mb-1">{item.product.title || item.product.name}</h3>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="inline-block bg-[#E7C873]/80 text-[#115d5a] px-3 py-0.5 rounded-lg text-sm font-bold border border-[#E7C873]">${item.product.price.toFixed(2)}</span>
+                          <span className="bg-[#E7C873]/20 text-[#E7C873] px-2 py-0.5 rounded-full text-xs font-semibold border border-[#E7C873]">{item.product.category || 'Souvenir'}</span>
+                        </div>
+                        <p className="text-gray-700 text-xs mb-1 line-clamp-2 max-w-xs">{item.product.description}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="bg-[#115d5a]/10 text-[#115d5a] px-2 py-0.5 rounded-full text-xs font-semibold border border-[#E7C873]">Stock: {item.product.stock ?? 'N/A'}</span>
+                          <span className="bg-[#E7C873]/20 text-[#E7C873] px-2 py-0.5 rounded-full text-xs font-semibold border border-[#E7C873]">Sold: {item.product.soldCount ?? 0}</span>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex flex-col items-end space-y-2">
+                    <div className="flex flex-col items-end space-y-2 mt-4 sm:mt-0">
                       <div className="flex items-center bg-white/10 rounded-full">
                         <motion.button
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
                           onClick={() => updateCartQuantity(item.product._id, item.quantity - 1)}
                           disabled={item.quantity <= 1}
-                          className="px-2 py-0.5 sm:px-3 sm:py-1 text-white disabled:opacity-50 text-sm sm:text-base"
+                          className="px-2 py-0.5 sm:px-3 sm:py-1 text-[#115d5a] disabled:opacity-50 text-sm sm:text-base"
                         >
                           -
                         </motion.button>
-                        <span className="text-white px-2 sm:px-3 text-sm sm:text-base">{item.quantity}</span>
+                        <span className="text-[#115d5a] px-2 sm:px-3 text-sm sm:text-base font-bold">{item.quantity}</span>
                         <motion.button
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
                           onClick={() => updateCartQuantity(item.product._id, item.quantity + 1)}
-                          className="px-2 py-0.5 sm:px-3 sm:py-1 text-white text-sm sm:text-base"
+                          className="px-2 py-0.5 sm:px-3 sm:py-1 text-[#115d5a] text-sm sm:text-base"
                         >
                           +
                         </motion.button>

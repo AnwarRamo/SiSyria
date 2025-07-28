@@ -10,13 +10,16 @@ import LoadingSpinner from "../components/LodingSpinner";
 import { useAuthStore } from "../api/stores/auth.store";
 
 // Public/User Pages
-import { Home, Login, Profile, Register } from "../pages";
-import { ContactUs, AboutUs, Travel, Souvenirs } from "../pages/user";
+import { Home, Login, Register,ContactUs, AboutUs, Travel, Souvenirs,TripeDeatiles } from "../pages/public";
+import { TripRequestForm,Profile } from "../pages/user";
 import CartPage from "../pages/user/CartPage";
+import MyRegistrations from "../pages/user/MyRegistrations";
 
 // Admin Pages
 import { Dashboard, ManageTrips, UserManagement, AddTrip } from "../pages/admin";
 import TripDaysDetails from "../pages/admin/TripDaysDetails";
+import RegistrationDashboard from "../pages/admin/RegistrationDashboard";
+
 
 // Public Routes
 const publicRoutes = [
@@ -28,12 +31,14 @@ const publicRoutes = [
   { path: "/cart", element: <CartPage /> },
     { path: "/travel", element: <Travel /> },
   { path: "/souvenirs", element: <Souvenirs /> },
+    { path: "/trips/:tripId", element: <TripeDeatiles /> }, 
 ];
 
 // Authenticated User Routes
 const protectedRoutes = [
   { path: "/profile", element: <Profile /> },
-
+  { path: "/TripRequestForm", element: <TripRequestForm /> },
+  { path: "/my-registrations", element: <MyRegistrations /> },
 ];
 
 const AppRoutes = () => {
@@ -70,7 +75,7 @@ const AppRoutes = () => {
           <Route path="trips" element={<ManageTrips />} />
           <Route path="users" element={<UserManagement />} />
           <Route path="add-trip" element={<AddTrip />} />
-          <Route path="trip-details" element={<TripDaysDetails />} />
+          <Route path="registrations" element={<RegistrationDashboard />} />
         </Route>
       </Route>
 

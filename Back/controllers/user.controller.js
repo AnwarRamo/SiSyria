@@ -37,17 +37,43 @@ const setAuthCookies = (res, accessToken, refreshToken) => {
 // Auth Controllers
 export const registerUser = async (req, res) => {
   try {
+    console.log('=== REGISTRATION REQUEST START ===');
+    console.log('Registration request body:', req.body);
+    console.log('Registration request headers:', req.headers);
+    
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+    if (!errors.isEmpty()) {
+      console.log('Validation errors:', errors.array());
+      return res.status(400).json({ errors: errors.array() });
+    }
 
-    const { username, displayName, email, password } = req.body;
+    const { 
+      username, 
+      displayName, 
+      email, 
+      password, 
+      phone, 
+      nationalId 
+    } = req.body;
+    
     const existingUser = await User.findOne({ $or: [{ username }, { email }] });
-    if (existingUser) return res.status(409).json({ code: "USER_EXISTS" });
+    if (existingUser) {
+      console.log('User already exists:', { username: existingUser.username, email: existingUser.email });
+      const conflictField = existingUser.username === username ? 'username' : 'email';
+      const errorResponse = { 
+        code: "USER_EXISTS",
+        message: `${conflictField.charAt(0).toUpperCase() + conflictField.slice(1)} already exists. Please choose a different ${conflictField}.`
+      };
+      console.log('Sending 409 response:', errorResponse);
+      return res.status(409).json(errorResponse);
+    }
 
     const user = await User.create({
       username: username.toLowerCase(),
       displayName: displayName?.trim() || username,
       email: email.toLowerCase(),
+      phone: phone?.trim(),
+      nationalId: nationalId?.trim(),
       hashedPassword: await bcrypt.hash(password, 10),
       role: (await User.countDocuments()) === 0 ? "admin" : "user",
       tokenVersion: 0
@@ -57,9 +83,16 @@ export const registerUser = async (req, res) => {
     setAuthCookies(res, accessToken, refreshToken);
 
     const { hashedPassword, tokenVersion, ...userData } = user.toObject();
-    res.status(201).json(userData);
+    console.log('=== REGISTRATION SUCCESS ===');
+    console.log('User created successfully:', { username: userData.username, email: userData.email });
+    res.status(201).json({ user: userData });
   } catch (error) {
-    res.status(500).json({ code: "REGISTRATION_ERROR" });
+    console.error('=== REGISTRATION ERROR ===');
+    console.error('Registration error:', error);
+    res.status(500).json({ 
+      code: "REGISTRATION_ERROR",
+      message: "An error occurred during registration. Please try again."
+    });
   }
 };
 

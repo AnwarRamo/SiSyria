@@ -1,13 +1,13 @@
-const { body } = require('express-validator');
+import { body } from 'express-validator';
 
 // Reusable error message function
 const errorMessage = (field, message) => `${field} ${message}`;
 
 const validateUserRegistration = [
-  body('name')
+  body('username')
     .trim()
-    .notEmpty().withMessage(errorMessage('Name', 'is required'))
-    .isLength({ min: 3, max: 31 }).withMessage(errorMessage('Name', 'should be between 3 and 31 characters')),
+    .notEmpty().withMessage(errorMessage('Username', 'is required'))
+    .isLength({ min: 3, max: 31 }).withMessage(errorMessage('Username', 'should be between 3 and 31 characters')),
 
   body('email')
     .trim()
@@ -21,10 +21,20 @@ const validateUserRegistration = [
     .matches(/[0-9]/).withMessage('Password must contain at least one number')
     .matches(/[!@#$%^&*(),.?":{}|<>]/).withMessage('Password must contain at least one special character'),
 
-  // body('phone')
-  //   .trim()
-  //   .notEmpty().withMessage(errorMessage('Phone number', 'is required'))
-  //   .isMobilePhone('any').withMessage('Please enter a valid phone number'),
+  body('displayName')
+    .optional()
+    .trim()
+    .isLength({ max: 50 }).withMessage('Display name should be less than 50 characters'),
+
+  body('phone')
+    .trim()
+    .notEmpty().withMessage(errorMessage('Phone number', 'is required'))
+    .isLength({ max: 20 }).withMessage('Phone number should be less than 20 characters'),
+
+  body('nationalId')
+    .trim()
+    .notEmpty().withMessage(errorMessage('National ID', 'is required'))
+    .isLength({ max: 20 }).withMessage('National ID should be less than 20 characters'),
 
   body('image')
     .optional()
@@ -58,4 +68,4 @@ const validateToken = [
     .notEmpty().withMessage('Token is required'),
 ];
 
-module.exports = { validateUserRegistration, validateUserLogin, validateToken };
+export { validateUserRegistration, validateUserLogin, validateToken };

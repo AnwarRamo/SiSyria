@@ -8,6 +8,7 @@ import {
   FaSignOutAlt,
   FaBars,
   FaTimes,
+  FaClipboardList,
 } from "react-icons/fa";
 import { useAuthStore } from "../../api/stores/auth.store";
 
@@ -20,6 +21,7 @@ function Sidebar({ user }) {
   const navItems = [
     { to: "/admin/dashboard", icon: <FaTachometerAlt />, label: "Dashboard", adminOnly: true },
     { to: "/admin/trips", icon: <FaSuitcase />, label: "Manage Trips", adminOnly: true },
+    { to: "/admin/registrations", icon: <FaClipboardList />, label: "Registrations", adminOnly: true },
     { to: "/admin/users", icon: <FaUsers />, label: "User Management", adminOnly: true },
     { to: "/admin/add-trip", icon: <FaArrowAltCircleRight />, label: "Create Trip", adminOnly: true },
   ];

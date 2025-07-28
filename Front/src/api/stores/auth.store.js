@@ -1,19 +1,24 @@
-// src/api/stores/auth.store.js
 import { create } from 'zustand';
 import { AuthService } from '../services/auth.service';
 import { TripService } from '../services/trip.service';
 
 export const useAuthStore = create((set, get) => ({
   user: null,
-  loading: true, // IMPORTANT: true initially, set to false ONLY after hydration attempt
+  loading: true,
   error: null,
   savedTrips: [],
-  _hasFetchedRegisteredTrips: false, // Flag to prevent re-fetching
+  _hasFetchedRegisteredTrips: false,
 
-  // Helper to format user data consistently
   _formatUser: (userData) => {
-    if (!userData || !userData._id) return null;
-    return {
+    if (!userData) {
+      return null;
+    }
+    
+    if (!userData._id) {
+      return null;
+    }
+    
+    const formatted = {
       id: userData._id,
       username: userData.username,
       displayName: userData.displayName || userData.username,
@@ -22,152 +27,149 @@ export const useAuthStore = create((set, get) => ({
       createdAt: userData.createdAt,
       avatar: userData.avatar,
     };
-  },
-
-  // Helper to compare user objects deeply (by ID for efficiency)
-  _areUsersSameById: (user1, user2) => {
-    if (!user1 && !user2) return true; // Both null/undefined, consider equal
-    if (!user1 || !user2) return false; // One is null/undefined, the other isn't
-    return user1.id === user2.id;
+    
+    return formatted;
   },
 
   login: async (credentials) => {
-    set({ loading: true, error: null }); // Use 'loading' for auth specific operations too
+    set({ loading: true, error: null });
     try {
-      const userData = await AuthService.login(credentials);
-      const newFormattedUser = get()._formatUser(userData);
-      const currentUser = get().user;
+      const response = await AuthService.login(credentials);
 
-      // Only update user if it's genuinely different to prevent extra renders
-      if (!get()._areUsersSameById(currentUser, newFormattedUser)) {
-        set({ user: newFormattedUser, _hasFetchedRegisteredTrips: false }); // Reset flag on *new* user login
-      }
-      set({ loading: false }); // Finished login loading
-      return newFormattedUser; // Return the new user object
-    } catch (error) {
-      console.error('Login error:', error);
-      const errorMessage = error.response?.data?.message || 'Login failed';
-      set({ error: { message: errorMessage }, loading: false, user: null });
-      throw new Error(errorMessage);
+      // ✅ نأخذ المستخدم مباشرة من data
+      const user = response.data;
+      if (!user) throw new Error("User data not found in response");
+
+      const formatted = get()._formatUser(user);
+
+      set({ 
+        user: formatted,
+        _hasFetchedRegisteredTrips: false 
+      });
+
+      return formatted;
+    } catch (err) {
+      const msg = err.response?.data?.message || err.message || 'Login failed';
+      set({ error: { message: msg }, loading: false });
+      throw new Error(msg);
+    } finally {
+      set({ loading: false });
     }
   },
 
   register: async (credentials) => {
-    set({ loading: true, error: null }); // Use 'loading' for auth specific operations too
+    set({ loading: true, error: null });
     try {
-      const userData = await AuthService.register(credentials);
-      const newFormattedUser = get()._formatUser(userData);
-      const currentUser = get().user;
-
-      if (!get()._areUsersSameById(currentUser, newFormattedUser)) {
-        set({ user: newFormattedUser, _hasFetchedRegisteredTrips: false }); // Reset flag on *new* user register
+      const response = await AuthService.register(credentials);
+      // Handle both response formats: { user: userData } and direct userData
+      const userData = response.data?.user || response.data;
+      const formatted = get()._formatUser(userData);
+      
+      if (!formatted) {
+        throw new Error('Failed to format user data after registration');
       }
-      set({ loading: false }); // Finished registration loading
-      return newFormattedUser; // Return the new user object
-    } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Registration failed';
-      set({ error: { message: errorMessage }, loading: false, user: null });
-      throw new Error(errorMessage);
+      
+      set({ 
+        user: formatted,
+        _hasFetchedRegisteredTrips: false 
+      });
+      
+      return formatted;
+    } catch (err) {
+      
+      let msg = 'Registration failed';
+      
+      if (err.response?.status === 409) {
+        msg = err.response?.data?.message || 'Username or email already exists. Please choose different credentials.';
+      } else if (err.response?.data?.code === 'USER_EXISTS') {
+        msg = 'Username or email already exists. Please choose different credentials.';
+      } else if (err.response?.data?.errors && err.response.data.errors.length > 0) {
+        // Handle validation errors
+        const firstError = err.response.data.errors[0];
+        msg = firstError.msg || 'Please check your input and try again.';
+      } else if (err.response?.data?.message) {
+        msg = err.response.data.message;
+      } else if (err.message) {
+        msg = err.message;
+      }
+      
+      set({ error: { message: msg }, loading: false });
+      throw err; // Throw the original error to preserve response data
+    } finally {
+      set({ loading: false });
     }
   },
 
-  // MODIFIED HYDRATE FUNCTION
   hydrate: async () => {
-    // Check if hydration has already been attempted or if user is already set.
-    // get().loading being true at this point (after initial state) means hydration is in progress.
-    if (get().user !== null || get().loading === false) {
-      // If user is already set, or if loading is false (meaning hydration already completed)
-      // then we don't need to hydrate again.
-      return;
-    }
-
-    // Set loading to true ONLY if it's the very first time hydrate is called and user is null
+    // Skip if already hydrated
+    if (!get().loading && get().user !== null) return;
     set({ loading: true, error: null });
-
     try {
-      const { user: userData } = await AuthService.getCurrentUser();
-      const newFormattedUser = get()._formatUser(userData);
-      const currentUser = get().user;
-
-      if (!get()._areUsersSameById(currentUser, newFormattedUser)) {
-         set({ user: newFormattedUser, _hasFetchedRegisteredTrips: false });
-      } else if (newFormattedUser === null && currentUser !== null) {
-        // If API says no user, but store still has one, clear it
-        set({ user: null, _hasFetchedRegisteredTrips: false }); // Clear _hasFetchedRegisteredTrips as well
-      }
-
-      set({ loading: false, error: null }); // Hydration complete (success or no user)
-
-    } catch (error) {
-      console.error('Hydration error:', error);
-      // On error, ensure user is null (if not already) and set loading to false
-      if (get().user !== null) {
+      const userData = await AuthService.getCurrentUser();
+      
+      if (userData === null) {
         set({ user: null });
+      } else {
+        // Handle both response formats: { user: {...}, stats: {...} } and direct userData
+        const actualUserData = userData.data?.user || userData.data || userData;
+        const formatted = get()._formatUser(actualUserData);
+        set({ user: formatted });
       }
-      set({ loading: false, error: null });
+    } catch (err) {
+      // Only set error for unexpected errors
+      if (!err.response || err.response.status !== 401) {
+        set({ error: { message: 'Failed to load user data' } });
+      }
+      // Do not log or throw for 401
+    } finally {
+      set({ loading: false });
     }
   },
 
   logout: async () => {
-    set({ loading: true, error: null }); // Set loading for the logout operation
+    set({ loading: true, error: null });
     try {
       await AuthService.logout();
-      // On logout, explicitly clear user and reset flag
-      set({ user: null, savedTrips: [], loading: false, _hasFetchedRegisteredTrips: false });
-      window.location.href = '/login'; // Redirect after state update
-    } catch (error) {
-      console.error('Logout failed:', error);
-      set({ user: null, savedTrips: [], error: { message: 'Logout failed' }, loading: false });
+    } catch (err) {
+      // Ignore logout errors
+    } finally {
+      set({ 
+        user: null,
+        savedTrips: [], 
+        _hasFetchedRegisteredTrips: false 
+      });
+      // Redirect without reloading the entire app
+      window.location.href = '/login';
     }
   },
 
   fetchRegisteredTrips: async () => {
-    const currentState = get();
-    // Only fetch if user exists AND we haven't fetched them yet in this session
-    // This ensures it only runs once per authenticated session
-    if (!currentState.user || currentState._hasFetchedRegisteredTrips) {
-      return;
-    }
-
+    const st = get();
+    if (!st.user || st._hasFetchedRegisteredTrips) return;
+    
     try {
-      const trips = await TripService.getRegisteredTrips() || [];
-      // Only update savedTrips if they actually changed (deep compare for content)
-      const currentSavedTrips = currentState.savedTrips;
-      const tripsChanged =
-        trips.length !== currentSavedTrips.length ||
-        trips.some((t, i) => t._id !== currentSavedTrips[i]?._id);
-
-      if (tripsChanged) {
-        set({ savedTrips: trips });
-      }
-      set({ _hasFetchedRegisteredTrips: true }); // Always set flag to true after successful attempt to prevent refetch
-    } catch (error) {
-      console.error("Failed to fetch registered trips:", error);
-      // You might consider resetting _hasFetchedRegisteredTrips to false here
-      // if you want to retry fetching registered trips on subsequent renders after an error.
-      // For now, leaving it true to prioritize stopping the loop.
+      const trips = (await TripService.getRegisteredTrips()) || [];
+      set({ savedTrips: trips, _hasFetchedRegisteredTrips: true });
+    } catch (err) {
+      set({ _hasFetchedRegisteredTrips: true });
     }
   },
 
   toggleTripRegistration: async (tripId) => {
-    const isRegistered = get().savedTrips.some(trip => trip._id === tripId);
+    const registered = get().savedTrips.some(t => t._id === tripId);
     try {
-      if (isRegistered) {
+      if (registered) {
         await TripService.unregisterTrip(tripId);
-        set(state => ({
-          savedTrips: state.savedTrips.filter(trip => trip._id !== tripId)
-        }));
+        set(state => ({ savedTrips: state.savedTrips.filter(t => t._id !== tripId) }));
       } else {
-        const registeredTrip = await TripService.registerTrip(tripId);
-        set(state => ({
-          savedTrips: [...state.savedTrips, registeredTrip]
-        }));
+        const newTrip = await TripService.registerTrip(tripId);
+        set(state => ({ savedTrips: [...state.savedTrips, newTrip] }));
       }
-    } catch (error) {
-      console.error('Failed to toggle trip registration:', error);
+    } catch (err) {
       throw new Error('Could not update trip registration.');
     }
   },
 
   isAdmin: () => get().user?.role === 'admin',
+  isLoggedIn: () => !!get().user,
 }));

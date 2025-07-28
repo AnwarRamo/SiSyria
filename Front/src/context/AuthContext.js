@@ -15,8 +15,8 @@ export function AuthProvider({ children }) {
 
   const checkAuthStatus = async () => {
     try {
-      const { data } = await apiClient.get('/auth/me');
-      setUser(data);
+      const { data } = await apiClient.get('/auth/me'); // الكوكيز ترسل تلقائياً
+      setUser(data.user || data); // حسب استجابة السيرفر
     } catch (error) {
       setUser(null);
     } finally {
@@ -28,24 +28,25 @@ export function AuthProvider({ children }) {
     try {
       setIsLoading(true);
       const { data } = await apiClient.post('/auth/login', credentials);
-      localStorage.setItem('accessToken', data.accessToken);
-      localStorage.setItem('refreshToken', data.refreshToken);
-      setUser(data.user);
+      setUser(data.user || data);
       navigate('/profile');
       return true;
     } catch (error) {
-      console.error('Login failed:', error);
       return false;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    setUser(null);
-    navigate('/login');
+  const logout = async () => {
+    try {
+      await apiClient.post('/auth/logout'); // ممكن السيرفر يمسح الكوكيز
+    } catch (error) {
+      // Optionally, handle logout error
+    } finally {
+      setUser(null);
+      navigate('/login');
+    }
   };
 
   const value = {
@@ -53,7 +54,7 @@ export function AuthProvider({ children }) {
     isLoading,
     login,
     logout,
-    checkAuthStatus
+    checkAuthStatus,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

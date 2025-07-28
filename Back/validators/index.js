@@ -1,10 +1,10 @@
-const { validationResult } = require('express-validator');
+import { validationResult } from 'express-validator';
 
 const runValidation = (req, res, next) => {
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
-    console.error('Validation Errors:', errors.array()); // Optional: log the validation errors for debugging
+
 
     return res.status(400).json({
       success: false,
@@ -21,4 +21,4 @@ const runValidation = (req, res, next) => {
   next();
 };
 
-module.exports = runValidation;
+export default runValidation;

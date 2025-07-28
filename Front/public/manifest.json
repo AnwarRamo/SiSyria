@@ -1,0 +1,18 @@
+{
+  "short_name": "SiSriaFinly",
+  "name": "SiSriaFinly - Discover Extraordinary Travel Adventures",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#115d5a",
+  "background_color": "#ffffff",
+  "description": "Your premier travel platform for discovering extraordinary adventures around the world",
+  "categories": ["travel", "tourism", "lifestyle"],
+  "lang": "en"
+} 

@@ -38,19 +38,19 @@ export function Dashboard() {
     const timeSinceLastActivity = Date.now() - lastActivityRef.current;
     const INACTIVITY_LIMIT = 15 * 60 * 1000;
     if (timeSinceLastActivity > INACTIVITY_LIMIT) {
-      console.log('[Dashboard] User inactive, logging out...');
+  
       logout();
     }
   }, [logout]);
 
   useEffect(() => {
-    console.log('[Dashboard Effect Activity] Setting up activity listeners.');
+
     const events = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
     events.forEach((event) => window.addEventListener(event, updateActivity, { passive: true }));
     updateActivity();
     activityTimeoutRef.current = setInterval(checkInactivity, 30 * 1000);
     return () => {
-      console.log('[Dashboard Effect Activity] Cleaning up activity listeners and aborting fetch.');
+  
       events.forEach((event) => window.removeEventListener(event, updateActivity));
       if (activityTimeoutRef.current) clearInterval(activityTimeoutRef.current);
       if (abortControllerRef.current) abortControllerRef.current.abort();
@@ -79,6 +79,7 @@ export function Dashboard() {
             throw err;
           }
           console.error(`[loadData processFetch] Error fetching ${sourceName}:`, err);
+          // Return default value instead of throwing error to prevent dashboard from crashing
           return { data: defaultValue, error: err, source: sourceName };
         }
       };

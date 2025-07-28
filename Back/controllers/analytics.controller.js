@@ -1,4 +1,8 @@
 // controllers/analytics.controller.js
+import User from "../models/user.model.js";
+import Trip from "../models/trip.model.js";
+import Booking from "../models/Booking.model.js";
+
 export const getUsersAnalytics = async (req, res) => {
     try {
       const data = await User.aggregate([
@@ -12,9 +16,22 @@ export const getUsersAnalytics = async (req, res) => {
         }
       ]);
       
-      res.json(data[0] || {});
+      // Return default values if no data
+      const result = data[0] || {
+        totalUsers: 0,
+        activeUsers: 0,
+        admins: 0
+      };
+      
+      res.json(result);
     } catch (error) {
-      res.status(500).json({ message: error.message });
+      console.error('Users Analytics Error:', error);
+      res.status(500).json({ 
+        message: error.message,
+        totalUsers: 0,
+        activeUsers: 0,
+        admins: 0
+      });
     }
   };
   
@@ -30,27 +47,38 @@ export const getUsersAnalytics = async (req, res) => {
         }
       ]);
       
-      res.json(data);
+      // Return empty array if no data
+      res.json(data || []);
     } catch (error) {
-      res.status(500).json({ message: error.message });
+      console.error('Trips Analytics Error:', error);
+      res.status(500).json({ 
+        message: error.message,
+        data: []
+      });
     }
   };
   
   export const getRevenueAnalytics = async (req, res) => {
     try {
-      const data = await Trip.aggregate([
+      // Use Booking model for revenue analytics since that's where actual revenue is tracked
+      const data = await Booking.aggregate([
         {
           $group: {
             _id: { $month: "$createdAt" },
-            totalRevenue: { $sum: "$price" },
-            tripsCount: { $sum: 1 }
+            totalRevenue: { $sum: "$amount" },
+            bookingsCount: { $sum: 1 }
           }
         },
         { $sort: { _id: 1 } }
       ]);
       
-      res.json(data);
+      // Return empty array if no data
+      res.json(data || []);
     } catch (error) {
-      res.status(500).json({ message: error.message });
+      console.error('Revenue Analytics Error:', error);
+      res.status(500).json({ 
+        message: error.message,
+        data: []
+      });
     }
   };

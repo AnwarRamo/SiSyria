@@ -1,8 +1,32 @@
 // src/components/admin/TravelPackages.jsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { AdminService } from '../../api/services/admin.service';
 
-const TravelPackages = ({ packages }) => {
+const TravelPackages = () => {
+  const [packages, setPackages] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    AdminService.getTravelPackages(controller.signal)
+      .then(setPackages)
+      .catch((err) => {
+        // Don't log canceled requests (component unmounted)
+        if (err.message !== 'canceled') {
+          console.error('Failed to fetch travel packages:', err);
+        }
+      })
+      .finally(() => setLoading(false));
+
+    return () => controller.abort();
+  }, []);
+
+  if (loading) {
+    return <div className="text-center py-10">Loading travel packages...</div>;
+  }
+
   if (!packages || packages.length === 0) {
     return (
       <div className="bg-white p-6 shadow-xl rounded-2xl text-center">
@@ -13,7 +37,7 @@ const TravelPackages = ({ packages }) => {
   }
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className="bg-white p-6 shadow-xl rounded-2xl"
@@ -22,16 +46,16 @@ const TravelPackages = ({ packages }) => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {packages.map((pkg, index) => (
           <motion.div
-            key={pkg._id || index} // Ensure the key is set correctly
+            key={pkg._id || index}
             initial={{ y: 20 }}
             animate={{ y: 0 }}
             transition={{ delay: index * 0.1 }}
             className="bg-white p-4 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300"
           >
-            <img 
+            <img
               src={pkg.imageUrl || '/images/default-package.jpg'}
-              alt={pkg.destination}
-              className="h-48 w-96 object-cover rounded-lg mb-4"
+              alt={pkg.destination || 'Travel Package'}
+              className="h-48 w-full object-cover rounded-lg mb-4"
               onError={(e) => {
                 e.target.src = '/images/default-package.jpg';
               }}
@@ -54,11 +78,9 @@ const TravelPackages = ({ packages }) => {
                     </svg>
                   ))}
                 </div>
-                <span className="text-gray-600 ml-2 text-sm">({pkg.reviews})</span>
+                <span className="text-gray-600 ml-2 text-sm">({pkg.reviews || 0})</span>
               </div>
-              <button 
-                className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg transition-all duration-300 transform hover:scale-[1.02]"
-              >
+              <button className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg transition-all duration-300 transform hover:scale-[1.02]">
                 View Details
               </button>
             </div>
