@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaCheck, FaTimes, FaEye, FaEyeSlash, FaUser, FaEnvelope, FaIdCard, FaUsers, FaCalendar, FaMapMarkerAlt, FaPhone, FaGlobe } from 'react-icons/fa';
+import { FaCheck, FaTimes, FaEye, FaEyeSlash, FaUser, FaEnvelope, FaIdCard, FaUsers, FaCalendar, FaPhone } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import { TripService } from '../../api/services/trip.service';
 
@@ -272,7 +272,7 @@ const RegistrationManagement = () => {
 
   const handleStatusUpdate = async (registrationId, status, rejectionReason, adminNote) => {
     try {
-      const result = await TripService.updateRegistrationStatus(registrationId, status, rejectionReason, adminNote);
+      await TripService.updateRegistrationStatus(registrationId, status, rejectionReason, adminNote);
       // Remove the registration from the list after status update
       setRegistrations(prev => prev.filter(reg => reg.registrationId !== registrationId));
     } catch (error) {
@@ -306,12 +306,24 @@ const RegistrationManagement = () => {
           <h2 className="text-2xl font-bold text-gray-900">Trip Registration Management</h2>
           <p className="text-gray-600">Review and manage trip registration requests</p>
         </div>
-        <button
-          onClick={fetchRegistrations}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          Refresh
-        </button>
+        <div className="flex items-center gap-4">
+          <select
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+            <option value="all">All</option>
+          </select>
+          <button
+            onClick={fetchRegistrations}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Refresh
+          </button>
+        </div>
       </div>
 
       {/* Stats */}

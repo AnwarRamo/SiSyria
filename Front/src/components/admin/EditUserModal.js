@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 
 const DEFAULT_BEHIND_GRADIENT =
   "radial-gradient(farthest-side circle at var(--pointer-x) var(--pointer-y),hsla(266,100%,90%,var(--modal-opacity)) 4%,hsla(266,50%,80%,calc(var(--modal-opacity)*0.75)) 10%,hsla(266,25%,70%,calc(var(--modal-opacity)*0.5)) 50%,hsla(266,0%,60%,0) 100%),conic-gradient(from 124deg at 50% 50%,#c137ffff 0%,#07c6ffff 40%,#07c6ffff 60%,#c137ffff 100%)";
@@ -13,8 +13,8 @@ const round = (value, precision = 3) => parseFloat(value.toFixed(precision));
 const adjust = (value, fromMin, fromMax, toMin, toMax) =>
   round(toMin + ((toMax - toMin) * (value - fromMin)) / (fromMax - fromMin));
 
-const easeInOutCubic = (x) =>
-  x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+// const easeInOutCubic = (x) =>
+//   x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
 
 const EditUserModal = ({ user, onClose, onSave }) => {
   const [formData, setFormData] = useState({
@@ -25,7 +25,7 @@ const EditUserModal = ({ user, onClose, onSave }) => {
 
   const wrapRef = useRef(null);
   const modalRef = useRef(null);
-  const rafIdRef = useRef(null);
+  // const rafIdRef = useRef(null);
 
   useEffect(() => {
     setFormData({
