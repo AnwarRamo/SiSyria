@@ -103,26 +103,35 @@ export const useAuthStore = create((set, get) => ({
   hydrate: async () => {
     // Skip if already hydrated
     if (!get().loading && get().user !== null) return;
+    
+    console.log('🔄 Starting hydration...');
     set({ loading: true, error: null });
+    
     try {
+      console.log('📡 Calling getCurrentUser...');
       const userData = await AuthService.getCurrentUser();
+      console.log('📡 getCurrentUser response:', userData);
       
       if (userData === null) {
-        set({ user: null });
+        console.log('👤 No user found, setting user to null');
+        set({ user: null, loading: false });
       } else {
         // Handle both response formats: { user: {...}, stats: {...} } and direct userData
         const actualUserData = userData.data?.user || userData.data || userData;
+        console.log('👤 User data found:', actualUserData);
         const formatted = get()._formatUser(actualUserData);
-        set({ user: formatted });
+        console.log('👤 Formatted user:', formatted);
+        set({ user: formatted, loading: false });
       }
     } catch (err) {
+      console.error('❌ Hydration error:', err);
       // Only set error for unexpected errors
       if (!err.response || err.response.status !== 401) {
-        set({ error: { message: 'Failed to load user data' } });
+        set({ error: { message: 'Failed to load user data' }, loading: false });
+      } else {
+        // For 401, just set loading to false
+        set({ loading: false });
       }
-      // Do not log or throw for 401
-    } finally {
-      set({ loading: false });
     }
   },
 

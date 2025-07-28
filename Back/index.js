@@ -63,7 +63,8 @@ const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
   'https://sisyriafinly.netlify.app',
-  'https://sisriafinly.vercel.app'
+  'https://sisriafinly.vercel.app',
+  'https://sisyria.netlify.app'
 ].filter(Boolean);
 
 app.use(
@@ -174,13 +175,22 @@ app.use('/api/*', (req, res) => {
   });
 });
 
-// Serve frontend in production
-if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "../Front/build")));
+// Serve frontend in both development and production
+const frontendPath = path.join(__dirname, "../Front/build");
+const indexPath = path.resolve(__dirname, "../Front/build", "index.html");
 
+// Check if frontend build exists
+const fs = require('fs');
+if (fs.existsSync(frontendPath) && fs.existsSync(indexPath)) {
+  app.use(express.static(frontendPath));
+  
   app.get("*", (req, res) => {
-    res.sendFile(path.resolve(__dirname, "../Front/build", "index.html"));
+    res.sendFile(indexPath);
   });
+  console.log('✅ Frontend build found and will be served');
+} else {
+  console.log('⚠️ Frontend build not found. Please run "npm run build" in the Front directory');
+  console.log('Expected path:', frontendPath);
 }
 
 // Start server
