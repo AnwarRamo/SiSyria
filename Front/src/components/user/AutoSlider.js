@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import damascus from "../../assets/images/damascus.jpg";
 import aleppo from "../../assets/images/Alepo.jpg";
 import img3 from "../../assets/images/img3.jpg";
@@ -6,153 +6,138 @@ import Latakia from "../../assets/images/latakia2.jpg";
 import { FaMapMarkerAlt } from "react-icons/fa";
 
 const images = [
-  {
-    src: damascus,
-    location: "Damascus",
-    description:
-      "The capital of Syria and one of the oldest continuously inhabited cities in the world, known for its historic markets and mosques.",
-  },
-  {
-    src: aleppo,
-    location: "Aleppo",
-    description:
-      "A city rich in cultural heritage, famous for its ancient citadel and traditional markets.",
-  },
-  {
-    src: img3,
-    location: "Palmyra",
-    description:
-      "An oasis in the Syrian desert, renowned for its Roman ruins and historical landmarks.",
-  },
-  {
-    src: Latakia,
-    location: "Latakia",
-    description:
-      "A coastal city on the Mediterranean Sea, known for its beautiful beaches and mild climate.",
-  },
+  { src: damascus, location: "Damascus", description: "The capital of Syria and one of the oldest continuously inhabited cities in the world, known for its historic markets and mosques." },
+  { src: aleppo, location: "Aleppo", description: "A city rich in cultural heritage, famous for its ancient citadel and traditional markets." },
+  { src: img3, location: "Palmyra", description: "An oasis in the Syrian desert, renowned for its Roman ruins and historical landmarks." },
+  { src: Latakia, location: "Latakia", description: "A coastal city on the Mediterranean Sea, known for its beautiful beaches and mild climate." },
 ];
 
-const ImageCard = ({ image, isActive, onClick, index, activeIndex, totalImages }) => {
-  const [isHovered, setIsHovered] = useState(false);
+const clamp = (num, min, max) => Math.min(Math.max(num, min), max);
 
-  // Calculate the horizontal position of the image based on the active index
-  const position = (index - activeIndex + totalImages) % totalImages;
-  const translateX = position * 100;
+const ImageCard = ({ image, isActive, onClick, parallax, leave }) => {
+  const parallaxX = parallax.x * (isActive ? 8 : 4);
+  const parallaxY = parallax.y * (isActive ? 8 : 4);
 
   return (
     <div
       onClick={onClick}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      className={`-mt-20 sm:-mt-24 md:-mt-28 lg:-mt-36 absolute w-32 h-48 sm:w-40 sm:h-56 md:w-44 md:h-64 lg:w-48 lg:h-72 cursor-pointer border-2 rounded-xl transition-all duration-500 ease-in-out ${
-        isActive
-          ? "border-[#E7C873] scale-110 sm:scale-125 md:scale-150 lg:scale-200 z-20 shadow-black"
-          : "border-transparent scale-75 sm:scale-80 md:scale-85 lg:scale-90 z-10 shadow-lg"
-      } hover:scale-105 sm:hover:scale-110`}
+      className={`relative cursor-pointer rounded-xl will-change-transform transition-all duration-500 ${
+        isActive ? "scale-100" : "scale-90" 
+      } ${leave ? "-translate-y-6 rotate-[-4deg] opacity-0" : "opacity-100"} hover:scale-105`}
       style={{
-        transform: `translateX(${translateX}%)`,
-        boxShadow: isHovered
-          ? "0 10px 20px rgba(0, 0, 0, 0.3)"
-          : "0 4px 8px rgba(0, 0, 0, 0.2)",
+        transform: `translate3d(${parallaxX}px, ${parallaxY}px, 0)`,
+        filter: isActive ? "none" : "grayscale(75%) brightness(0.9)",
+        boxShadow: isActive ? "0 12px 28px rgba(231,200,115,0.35)" : "0 6px 18px rgba(0,0,0,0.25)",
+        border: isActive ? "2px solid #E7C873" : "1px solid rgba(255,255,255,0.2)",
       }}
     >
       <img
         src={image.src}
         alt={image.location}
-        className="w-full h-full object-cover rounded-md"
+        className="w-32 h-48 sm:w-36 sm:h-52 md:w-40 md:h-60 object-cover rounded-lg"
       />
-      <div className="absolute top-2 sm:top-3 md:top-4 left-1 text-[#E7C873] text-xl sm:text-2xl md:text-3xl">
+      <div className="absolute top-2 left-2 text-[#E7C873] text-lg">
         <FaMapMarkerAlt />
       </div>
-      {isHovered && (
-        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-3 md:p-4 text-white text-center">
-          <p className="text-xs sm:text-sm md:text-base">{image.description}</p>
-        </div>
-      )}
     </div>
   );
 };
 
-const LocationIndicator = ({ activeIndex, images }) => (
-  <div className="absolute top-0 left-2 sm:left-3 md:left-4 h-full flex flex-col items-center justify-center">
-    <div className="absolute top-0 left-1/2 transform -translate-x-1/2 h-full w-0.5 bg-[#E7C873]"></div>
+const ProgressDots = ({ activeIndex, images, setActiveIndex }) => (
+  <div className="absolute bottom-6 left-0 right-0 flex justify-center space-x-3">
     {images.map((_, index) => (
-      <div key={index} className="relative z-10 mb-8 sm:mb-12 md:mb-16">
-        <div
-          className={`w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 lg:w-8 lg:h-8 rounded-full border-2 flex items-center justify-center transition-all duration-500 ${
-            activeIndex === index
-              ? "bg-[#E7C873] text-[#115d5a] border-[#E7C873] scale-100"
-              : "bg-transparent text-white border-white scale-75"
-          }`}
-        >
-          <span className="text-xs sm:text-sm md:text-sm lg:text-base">{index + 1}</span>
-        </div>
-      </div>
+      <button
+        key={index}
+        onClick={() => setActiveIndex(index)}
+        className={`h-3 w-3 rounded-full transition-all duration-500 ${
+          activeIndex === index ? "bg-[#E7C873] shadow-lg shadow-[#E7C873]" : "bg-white/50"
+        }`}
+      />
     ))}
   </div>
 );
 
-const ProgressBar = ({ activeIndex, images, setActiveIndex }) => {
-  return (
-    <div className="absolute bottom-4 sm:bottom-6 md:bottom-8 left-0 right-0 flex justify-center space-x-1 sm:space-x-2">
-      {images.map((_, index) => (
-        <button
-          key={index}
-          onClick={() => setActiveIndex(index)}
-          className={`h-1 w-6 sm:w-7 md:w-8 rounded-full transition-all duration-500 ${
-            activeIndex === index ? "bg-[#E7C873]" : "bg-white/50"
-          }`}
-        ></button>
-      ))}
-    </div>
-  );
-};
-
 const AutoSlider = () => {
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [activeIndex, setActiveIndex] = useState(0); // background/text hero
+  const [cardLeadIndex, setCardLeadIndex] = useState(0); // first card in the row
+  const [isCycling, setIsCycling] = useState(false); // animating first card moving to back
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Preload images before rendering slider
+  // Parallax state (x,y from -1 to 1)
+  const [parallax, setParallax] = useState({ x: 0, y: 0 });
+  const sliderRef = useRef(null);
+
   useEffect(() => {
-    const loadImages = async () => {
-      const imagePromises = images.map((img) => {
-        return new Promise((resolve) => {
-          const image = new Image();
-          image.src = img.src;
-          image.onload = resolve;
-        });
+    Promise.all(images.map(img => {
+      return new Promise(res => {
+        const image = new Image();
+        image.src = img.src;
+        image.onload = res;
       });
-      await Promise.all(imagePromises);
-      setIsLoading(false);
-    };
-    loadImages();
+    })).then(() => setIsLoading(false));
   }, []);
 
-  // Automatic slide change every 5 seconds with transition
   useEffect(() => {
     const interval = setInterval(() => {
       setIsTransitioning(true);
-      setTimeout(() => {
-        setActiveIndex((prev) => (prev + 1) % images.length);
-        setIsTransitioning(false);
-      }, 500);
+      setIsCycling(true);
+
+      // Compute next index for both hero and cards
+      setCardLeadIndex(prev => {
+        const next = (prev + 1) % images.length;
+        // Update hero slightly earlier for a nicer handoff
+        setTimeout(() => setActiveIndex(next), 200);
+        // Reorder cards after the leave animation completes
+        setTimeout(() => {
+          setCardLeadIndex(next);
+          setIsCycling(false);
+          setIsTransitioning(false);
+        }, 500);
+        // Keep current until reorder timeout fires
+        return prev;
+      });
     }, 5000);
     return () => clearInterval(interval);
   }, []);
 
-  // Keyboard navigation for left and right arrows
+  // Keyboard navigation (Left/Right arrows)
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === "ArrowLeft") {
-        setActiveIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+        setActiveIndex(prev => (prev === 0 ? images.length - 1 : prev - 1));
       } else if (e.key === "ArrowRight") {
-        setActiveIndex((prev) => (prev + 1) % images.length);
+        setActiveIndex(prev => (prev + 1) % images.length);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
+
+  // Parallax handler
+  useEffect(() => {
+    if (isLoading) return;
+
+    const sliderEl = sliderRef.current;
+    if (!sliderEl) return;
+
+    const handleMouseMove = (e) => {
+      const rect = sliderEl.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      const y = ((e.clientY - rect.top) / rect.height) * 2 - 1;
+      setParallax({ x: clamp(x, -1, 1), y: clamp(y, -1, 1) });
+    };
+
+    const handleMouseLeave = () => setParallax({ x: 0, y: 0 });
+
+    sliderEl.addEventListener("mousemove", handleMouseMove);
+    sliderEl.addEventListener("mouseleave", handleMouseLeave);
+
+    return () => {
+      sliderEl.removeEventListener("mousemove", handleMouseMove);
+      sliderEl.removeEventListener("mouseleave", handleMouseLeave);
+    };
+  }, [isLoading]);
 
   if (isLoading) {
     return (
@@ -162,78 +147,99 @@ const AutoSlider = () => {
     );
   }
 
+  // Background parallax offset (larger than cards)
+  const bgTranslateX = parallax.x * 20;
+  const bgTranslateY = parallax.y * 20;
+
+  // Ordered cards so the first (index 0) is the highlighted one
+  const orderedCards = [...images.slice(cardLeadIndex), ...images.slice(0, cardLeadIndex)];
+
   return (
-    <div className="flex flex-col min-h-screen overflow-hidden mt-16 sm:mt-18 md:mt-20">
-      <div className="flex-grow relative w-full h-[100vh] sm:h-[110vh] md:h-[120vh]">
-        {/* Background Images with Fade */}
-        <div className="absolute inset-0 w-full h-full">
-          {images.map((image, index) => (
-            <img
-              key={index}
-              src={image.src}
-              alt={image.location}
-              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
-                activeIndex === index ? "opacity-100" : "opacity-0"
-              }`}
-              style={{ filter: 'blur(2px) brightness(0.85)' }}
-            />
-          ))}
-          <div className="absolute inset-0 w-full h-full bg-gradient-to-t from-black/70 to-transparent" style={{backdropFilter: 'blur(4px)'}}></div>
-        </div>
+    <div
+      ref={sliderRef}
+      className="relative w-full min-h-[110vh] md:min-h-[120vh] overflow-hidden select-none"
+    >
+      {/* Background */}
+      {images.map((image, index) => (
+        <img
+          key={index}
+          src={image.src}
+          alt={image.location}
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[1200ms] z-0`}
+          style={{
+            opacity: activeIndex === index ? 1 : 0,
+            filter: "brightness(0.85)",
+            transform: `translate3d(${bgTranslateX}px, ${bgTranslateY}px, 0) scale(1.05)`,
+            transitionProperty: "opacity, transform",
+          }}
+        />
+      ))}
 
-        {/* Text Content - Now White Card */}
-        <div
-          className={`absolute top-1/4 sm:top-1/3 left-2 sm:left-4 md:left-8 lg:left-16 xl:left-32 transform -translate-y-1/2 text-[#115d5a] max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg px-4 sm:px-6 md:px-8 lg:px-10 transition-all duration-500 ${
-            isTransitioning ? "opacity-0 translate-y-8" : "opacity-100 translate-y-0"
-          } bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-gray-200 p-6 sm:p-8 md:p-10`}
-          style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.15)' }}
+      {/* Readability overlay (no white) */}
+      <div
+        className="absolute inset-0 pointer-events-none z-10"
+        style={{
+          background:
+            "linear-gradient(to top, rgba(0,0,0,0.35), rgba(0,0,0,0.12) 35%, rgba(0,0,0,0.08) 60%, rgba(0,0,0,0.25))",
+        }}
+      />
+
+      {/* Text Overlay on the LEFT */}
+      <div
+        className={`absolute top-1/2 left-10 md:left-16 transform -translate-y-1/2 text-left text-white transition-all duration-700 z-30 ${
+          isTransitioning ? "opacity-0 translate-y-5" : "opacity-100 translate-y-0"
+        }`}
+        style={{
+          textShadow: "0 6px 18px rgba(0,0,0,0.45)",
+          transformStyle: "preserve-3d",
+          transform: `translateZ(30px) translateX(${parallax.x * 10}px) translateY(${parallax.y * -10}px)`,
+          transitionProperty: "opacity, transform",
+          maxWidth: "38rem",
+        }}
+      >
+        <h1 className="text-5xl sm:text-6xl md:text-7xl font-extrabold tracking-wide text-[#E7C873]">
+          {images[activeIndex].location}
+        </h1>
+        <p className="mt-4 text-lg sm:text-xl text-white/95 max-w-2xl">
+          {images[activeIndex].description}
+        </p>
+        <button
+          aria-label="Explore destination"
+          className="mt-6 inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-[#E7C873] text-[#115d5a] font-semibold shadow-[0_10px_30px_rgba(231,200,115,0.35)] ring-1 ring-white/20 hover:-translate-y-0.5 hover:shadow-[0_20px_40px_rgba(231,200,115,0.45)] active:translate-y-0 transition-transform duration-300"
         >
-          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold drop-shadow-sm">
-            {images[activeIndex].location}
-          </h1>
-          <p className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl mt-2 sm:mt-3 md:mt-4 text-gray-700">
-            {images[activeIndex].description}
-          </p>
-          <hr className="my-4 sm:my-5 md:my-6 lg:my-8 border-[#E7C873] border-2 w-20 sm:w-24 md:w-28 lg:w-32 xl:w-40" />
-          <button className="flex items-center px-6 sm:px-8 md:px-10 py-2 sm:py-3 md:py-4 bg-[#E7C873] text-[#115d5a] font-semibold rounded-lg hover:bg-[#d4b15d] transition-all duration-700 transform hover:scale-105 shadow-lg text-sm sm:text-base md:text-lg">
-            <span>Explore</span>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 ml-2"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M17 8l4 4m0 0l-4 4m4-4H3"
-              />
-            </svg>
-          </button>
-        </div>
+          Explore
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+            <path fillRule="evenodd" d="M3.75 12a.75.75 0 01.75-.75h12.69l-4.22-4.22a.75.75 0 111.06-1.06l5.5 5.5a.75.75 0 010 1.06l-5.5 5.5a.75.75 0 11-1.06-1.06l4.22-4.22H4.5a.75.75 0 01-.75-.75z" clipRule="evenodd" />
+          </svg>
+        </button>
+      </div>
 
-        {/* Image Cards */}
-        <div className="absolute top-1/2 left-1/2 transform -translate-y-1/2 -translate-x-1/2 w-full flex justify-center">
-          {images.map((image, index) => (
+      {/* Image Cards on the RIGHT: fixed, side-by-side, small gaps */}
+      <div className="absolute top-1/2 right-10 md:right-16 -translate-y-1/2 z-20">
+        <div className="flex items-center gap-3 md:gap-4">
+          {orderedCards.map((image, index) => (
             <ImageCard
               key={index}
               image={image}
-              isActive={index === activeIndex}
-              onClick={() => setActiveIndex(index)}
-              index={index}
-              activeIndex={activeIndex}
-              totalImages={images.length}
+              isActive={index === 0}
+              onClick={() => {
+                // When clicking a card, make it the lead, then update hero shortly after
+                setCardLeadIndex((prev) => {
+                  const clickedAbsoluteIndex = (cardLeadIndex + index) % images.length;
+                  setTimeout(() => setActiveIndex(clickedAbsoluteIndex), 250);
+                  return clickedAbsoluteIndex;
+                });
+              }}
+              parallax={parallax}
+              leave={isCycling && index === 0}
             />
           ))}
         </div>
+      </div>
 
-        {/* Location Indicator */}
-        <LocationIndicator activeIndex={activeIndex} images={images} />
-
-        {/* Progress Bar */}
-        <ProgressBar activeIndex={activeIndex} images={images} setActiveIndex={setActiveIndex} />
+      {/* Progress Dots (move bottom-right near cards) */}
+      <div className="absolute bottom-8 right-10 md:right-16 z-40">
+        <ProgressDots activeIndex={activeIndex} images={images} setActiveIndex={setActiveIndex} />
       </div>
     </div>
   );

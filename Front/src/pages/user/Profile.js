@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FiSettings, FiLogOut, FiGrid, FiHeart, FiClock, FiUser, FiPhone, 
   FiGlobe, FiCreditCard, FiMail, FiMapPin, FiCalendar, FiUsers,
-  FiEdit3, FiSave, FiX, FiCheck, FiAlertCircle, FiStar
+  FiEdit3, FiSave, FiX, FiCheck, FiAlertCircle, FiStar, FiBell
 } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
@@ -15,6 +15,8 @@ import Avatar from '../../components/ui/Avatar';
 import Navbar from '../../layout/Navbar';
 import Footer from '../../layout/Footer';
 import LodingSpinner from '../../components/LodingSpinner';
+import TicketManagement from '../../components/user/TicketManagement';
+import NotificationCenter from '../../components/user/NotificationCenter';
 
 const ProfileHeader = ({ user, onLogout }) => {
   return (
@@ -391,6 +393,7 @@ const AccountSettingsSection = () => {
   const [stats, setStats] = useState({});
   const [isLoadingTrips, setIsLoadingTrips] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
+  const [showNotifications, setShowNotifications] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -457,7 +460,9 @@ const AccountSettingsSection = () => {
             { id: 'overview', label: 'Overview', icon: FiGrid },
             { id: 'personal', label: 'Personal Info', icon: FiUser },
             { id: 'trips', label: 'My Trips', icon: FiMapPin },
-            { id: 'settings', label: 'Settings', icon: FiSettings }
+            { id: 'tickets', label: 'My Tickets', icon: FiCreditCard },
+            { id: 'settings', label: 'Settings', icon: FiSettings },
+            { id: 'notifications', label: 'Notifications', icon: FiBell }
           ].map((tab) => (
             <button
               key={tab.id}
@@ -500,8 +505,30 @@ const AccountSettingsSection = () => {
               <RecentTripsSection trips={trips} />
             )}
 
+            {activeTab === 'tickets' && (
+              <TicketManagement />
+            )}
+
             {activeTab === 'settings' && (
               <AccountSettingsSection />
+            )}
+
+            {activeTab === 'notifications' && (
+              <div className="relative">
+                <button
+                  onClick={() => setShowNotifications(true)}
+                  className="mb-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
+                  Open Notifications
+                </button>
+                {showNotifications && (
+                  <NotificationCenter
+                    isOpen={showNotifications}
+                    onClose={() => setShowNotifications(false)}
+                    onViewTrip={(tripId) => window.open(`/trips/${tripId}`, '_blank')}
+                  />
+                )}
+              </div>
             )}
           </motion.div>
         </AnimatePresence>

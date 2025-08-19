@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { FaPlane } from 'react-icons/fa';
 import TravelGuide from '../../components/public/components/TravelGuide';
 import Itinerary from '../../components/public/components/Itinerary';
 import Gallery from '../../components/public/components/Gallery';
 import LoadingSpinner from '../../components/LodingSpinner';
 import Navbar from '../../layout/Navbar';
 import CountdownTimer from '../../components/user/CountdownTimer';
+import TicketBooking from '../../components/user/TicketBooking';
+import { useAuthStore } from '../../api/stores/auth.store';
 
 // Helper function to get continent from destination
 const getContinentFromDestination = (destination) => {
@@ -104,6 +107,8 @@ const TripDetails = () => {
   const [error, setError] = useState(null);
   const [isPointing, setIsPointing] = useState(false);
   const [isWaving, setIsWaving] = useState(true);
+  const [showTicketBooking, setShowTicketBooking] = useState(false);
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn());
 
   useEffect(() => {
     const abortController = new AbortController();
@@ -314,49 +319,121 @@ const TripDetails = () => {
               </div>
             </div>
 
-            <button
-              className="mt-10 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold py-4 px-10 rounded-full text-xl shadow-lg transform hover:scale-105 transition-all duration-300 animate-pulse"
-              onClick={handleWave}
-            >
-              I Want This Trip!
-            </button>
+            <div className="flex flex-wrap justify-center gap-4 mt-10">
+              <button
+                className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold py-4 px-10 rounded-full text-xl shadow-lg transform hover:scale-105 transition-all duration-300 animate-pulse"
+                onClick={handleWave}
+              >
+                I Want This Trip!
+              </button>
+              
+              {trip.includeFlights && (
+                <>
+                  <button
+                    className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-bold py-4 px-10 rounded-full text-xl shadow-lg transform hover:scale-105 transition-all duration-300"
+                    onClick={() => {
+                      if (!isLoggedIn) {
+                        navigate('/login');
+                        return;
+                      }
+                      navigate(`/book-ticket/${trip._id}`);
+                    }}
+                  >
+                    Book Plane Ticket (Full Page)
+                  </button>
+                  <button
+                    className="bg-gradient-to-r from-blue-400 to-green-500 hover:from-blue-600 hover:to-green-600 text-white font-bold py-4 px-10 rounded-full text-xl shadow-lg transform hover:scale-105 transition-all duration-300"
+                    onClick={() => {
+                      if (!isLoggedIn) {
+                        navigate('/login');
+                        return;
+                      }
+                      setShowTicketBooking(true);
+                    }}
+                  >
+                    Book Plane Ticket (Popup)
+                  </button>
+                </>
+              )}
+            </div>
           </div>
 
           {/* Animated Travel Guide */}
           <TravelGuide isPointing={isPointing} isWaving={isWaving} />
         </div>
 
-        {/* Trip Details Section */}
-        <div className="py-10 px-4 max-w-5xl mx-auto">
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">Trip Details</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <p className="mb-2"><span className="font-semibold">Start:</span> {trip.startDate ? formatDate(trip.startDate) : 'TBA'}</p>
-                <p className="mb-2"><span className="font-semibold">End:</span> {trip.endDate ? formatDate(trip.endDate) : 'TBA'}</p>
-                <p className="mb-2"><span className="font-semibold">Duration:</span> {trip.days} days</p>
-                <p className="mb-2"><span className="font-semibold">Destination:</span> {trip.destination}</p>
-                <p className="mb-2"><span className="font-semibold">Continent:</span> {continent}</p>
-                <p className="mb-2"><span className="font-semibold">Type:</span> {trip.type}</p>
-                <p className="mb-2"><span className="font-semibold">Capacity:</span> {trip.capacity}</p>
-                <p className="mb-2"><span className="font-semibold">Status:</span> {trip.status}</p>
-              </div>
-              <div>
-                <p className="mb-2"><span className="font-semibold">Included:</span></p>
-                <ul className="list-disc list-inside text-green-700 mb-2">
-                  {trip.included && trip.included.length > 0 ? trip.included.map((item, idx) => (
-                    <li key={idx}>{item}</li>
-                  )) : <li>See itinerary</li>}
-                </ul>
-                <p className="mb-2"><span className="font-semibold">Not Included:</span></p>
-                <ul className="list-disc list-inside text-red-700">
-                  {trip.notIncluded && trip.notIncluded.length > 0 ? trip.notIncluded.map((item, idx) => (
-                    <li key={idx}>{item}</li>
-                  )) : <li>See itinerary</li>}
-                </ul>
+                  {/* Trip Details Section */}
+          <div className="py-10 px-4 max-w-5xl mx-auto">
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">Trip Details</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <p className="mb-2"><span className="font-semibold">Start:</span> {trip.startDate ? formatDate(trip.startDate) : 'TBA'}</p>
+                  <p className="mb-2"><span className="font-semibold">End:</span> {trip.endDate ? formatDate(trip.endDate) : 'TBA'}</p>
+                  <p className="mb-2"><span className="font-semibold">Duration:</span> {trip.days} days</p>
+                  <p className="mb-2"><span className="font-semibold">Destination:</span> {trip.destination}</p>
+                  <p className="mb-2"><span className="font-semibold">Continent:</span> {continent}</p>
+                  <p className="mb-2"><span className="font-semibold">Type:</span> {trip.type}</p>
+                  <p className="mb-2"><span className="font-semibold">Capacity:</span> {trip.capacity}</p>
+                  <p className="mb-2"><span className="font-semibold">Status:</span> {trip.status}</p>
+                </div>
+                <div>
+                  <p className="mb-2"><span className="font-semibold">Included:</span></p>
+                  <ul className="list-disc list-inside text-green-700 mb-2">
+                    {trip.included && trip.included.length > 0 ? trip.included.map((item, idx) => (
+                      <li key={idx}>{item}</li>
+                    )) : <li>See itinerary</li>}
+                  </ul>
+                  <p className="mb-2"><span className="font-semibold">Not Included:</span></p>
+                  <ul className="list-disc list-inside text-red-700">
+                    {trip.notIncluded && trip.notIncluded.length > 0 ? trip.notIncluded.map((item, idx) => (
+                      <li key={idx}>{item}</li>
+                    )) : <li>See itinerary</li>}
+                  </ul>
+                </div>
               </div>
             </div>
-          </div>
+
+            {/* Flight Information */}
+            {trip.includeFlights && (
+              <div className="mb-8 bg-blue-50 rounded-lg p-6 border border-blue-200">
+                <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                  <FaPlane className="mr-2 text-blue-600" />
+                  Flight Information
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h4 className="font-semibold text-gray-800 mb-2">Departure</h4>
+                    <p className="text-gray-700">{trip.departureCity} ({trip.departureAirport})</p>
+                    <p className="text-sm text-gray-500">
+                      {trip.departureTime ? new Date(trip.departureTime).toLocaleString() : 'TBA'}
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-800 mb-2">Arrival</h4>
+                    <p className="text-gray-700">{trip.arrivalCity} ({trip.arrivalAirport})</p>
+                    <p className="text-sm text-gray-500">
+                      {trip.returnTime ? new Date(trip.returnTime).toLocaleString() : 'TBA'}
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-4 p-4 bg-white rounded border border-blue-300">
+                  <p className="text-blue-800">
+                    <span className="font-semibold">Airline:</span> {trip.airline} | 
+                    <span className="font-semibold ml-2">Flight:</span> {trip.flightNumber}
+                    {trip.returnFlightNumber && (
+                      <>
+                        | <span className="font-semibold ml-2">Return Flight:</span> {trip.returnFlightNumber}
+                      </>
+                    )}
+                  </p>
+                  <p className="text-sm text-blue-600 mt-2">
+                    <span className="font-semibold">Available Seats:</span> {trip.availableSeats} | 
+                    <span className="font-semibold ml-2">Ticket Price:</span> ${trip.ticketPrice || trip.price}
+                  </p>
+                </div>
+              </div>
+            )}
 
           {/* Day Plans */}
           {trip.dayPlans && trip.dayPlans.length > 0 && (
@@ -412,6 +489,18 @@ const TripDetails = () => {
           <p>© 2023 Wanderlust Adventures. All rights reserved.</p>
         </footer>
       </div>
+
+      {/* Ticket Booking Modal */}
+      {showTicketBooking && trip && (
+        <TicketBooking
+          trip={trip}
+          onClose={() => setShowTicketBooking(false)}
+          onSuccess={(ticketData) => {
+            console.log('Ticket booked successfully:', ticketData);
+            setShowTicketBooking(false);
+          }}
+        />
+      )}
     </>
   );
 };

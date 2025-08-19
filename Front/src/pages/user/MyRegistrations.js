@@ -7,6 +7,7 @@ import { TripService } from '../../api/services/trip.service';
 import Navbar from '../../layout/Navbar';
 import Footer from '../../layout/Footer';
 import CountdownTimer from '../../components/user/CountdownTimer';
+import { EventService } from '../../api/services/event.service';
 
 const StatusBadge = ({ status }) => {
   const statusConfig = {
@@ -232,6 +233,7 @@ const TripCard = ({ booking, onCancel, onViewDetails }) => {
 
 const MyRegistrations = () => {
   const [bookings, setBookings] = useState([]);
+  const [eventRequests, setEventRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState('all');
@@ -246,6 +248,7 @@ const MyRegistrations = () => {
       setLoading(true);
       const data = await TripService.getUserBookings();
       setBookings(data);
+      try { const ev = await EventService.myBookings(); setEventRequests(ev); } catch {}
       setError(null);
     } catch (err) {
       setError(err.message || 'Failed to load registrations');
@@ -392,6 +395,29 @@ const MyRegistrations = () => {
               </AnimatePresence>
             </div>
           )}
+
+          {/* Event Requests */}
+          <div className="mt-12">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">My Event Requests</h2>
+            {eventRequests.length === 0 ? (
+              <div className="text-gray-500">No event requests yet.</div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {eventRequests.map(r => (
+                  <div key={r._id} className="bg-white rounded-2xl shadow border p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="font-semibold">{r.eventType?.toUpperCase()}</div>
+                      <span className={`text-xs font-bold px-2 py-1 rounded ${r.status === 'approved' ? 'bg-emerald-100 text-emerald-700' : r.status === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>{r.status}</span>
+                    </div>
+                    <div className="text-sm text-gray-600">Date: {new Date(r.eventDate).toLocaleDateString()}</div>
+                    <div className="text-sm text-gray-600">Guests: {r.guestCount || 1}</div>
+                    {r.venue && <div className="text-sm text-gray-600">Venue: {r.venue}</div>}
+                    {r.description && <div className="text-sm text-gray-600 mt-2 line-clamp-2">{r.description}</div>}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
       

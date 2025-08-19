@@ -11,6 +11,7 @@ import { toast } from "react-toastify";
 
 const NAV_LINKS = [
   { path: "/", label: "Home" },
+  { path: "/events", label: "Events" },
   { path: "/travel", label: "Travel" },
   { path: "/souvenirs", label: "Souvenirs" },
   { path: "/about-us", label: "About Us" },
@@ -30,6 +31,10 @@ const Navbar = () => {
 
   const { user, logout } = useAuthStore();
   const { items, totalQuantity } = useCartStore();
+
+  // Determine current tripId if on a trip details page to enable direct booking link
+  const tripMatch = location.pathname.match(/^\/trips\/([^/?#]+)/);
+  const bookTicketPath = tripMatch ? `/book-ticket/${tripMatch[1]}` : '/book-ticket';
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 40);
@@ -147,21 +152,21 @@ const Navbar = () => {
       }}
       aria-label="Main navigation"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 flex items-center justify-between h-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16">
         {/* Logo */}
-        <NavLink to="/" className="flex items-center gap-3">
-          <img src={logo} alt="Logo" className="h-12 w-12 rounded-full shadow-md" />
-          <span className="text-2xl font-extrabold tracking-tight text-black dark:text-white hidden sm:block" style={{ letterSpacing: '-1px' }}>SiSyria</span>
+        <NavLink to="/" className="flex items-center gap-2">
+          <img src={logo} alt="Logo" className="h-9 w-9 rounded-full shadow-md" />
+          <span className="text-xl font-extrabold tracking-tight text-black dark:text-white hidden sm:block" style={{ letterSpacing: '-0.5px' }}>SiSyria</span>
         </NavLink>
 
         {/* Center Nav Links */}
-        <div className="hidden lg:flex gap-2 relative">
+        <div className="hidden lg:flex gap-1.5 relative">
           {NAV_LINKS.map((link) => (
             <NavLink
               key={link.path}
               to={link.path}
               className={({ isActive }) =>
-                `relative px-4 py-2 text-lg font-semibold transition-colors duration-200 rounded-full group ` +
+                `relative px-3 py-1.5 text-base font-semibold transition-colors duration-200 rounded-full group ` +
                 (isActive
                   ? "bg-white text-black border-2 border-[#FF4500] shadow-md dark:bg-[#0a192f] dark:text-white"
                   : "bg-white text-black border-2 border-transparent hover:border-[#FF4500] hover:text-[#FF4500] dark:bg-[#0a192f] dark:text-white dark:hover:text-[#FF4500]")
@@ -171,7 +176,7 @@ const Navbar = () => {
               {link.label}
               {/* Animated underline */}
               <span
-                className={`absolute left-4 right-4 -bottom-1 h-0.5 rounded bg-[#FF4500] transition-all duration-300 ${
+                className={`absolute left-3 right-3 -bottom-0.5 h-0.5 rounded bg-[#FF4500] transition-all duration-300 ${
                   location.pathname === link.path ? 'opacity-100 scale-x-100' : 'opacity-0 scale-x-0 group-hover:scale-x-100'
                 }`}
               />
@@ -180,14 +185,14 @@ const Navbar = () => {
         </div>
 
         {/* Right Actions */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           {/* Dark/Light Mode Toggle */}
           <button
             onClick={toggleDarkMode}
-            className="flex items-center justify-center p-2 rounded-full bg-white/70 dark:bg-[#0a192f]/80 hover:bg-[#FF4500]/10 dark:hover:bg-[#FF4500]/20 transition shadow"
+            className="flex items-center justify-center p-1.5 rounded-full bg-white/70 dark:bg-[#0a192f]/80 hover:bg-[#FF4500]/10 dark:hover:bg-[#FF4500]/20 transition shadow"
             title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
           >
-            {darkMode ? <FaSun className="text-yellow-400 text-xl" /> : <FaMoon className="text-black text-xl dark:text-white" />}
+            {darkMode ? <FaSun className="text-yellow-400 text-lg" /> : <FaMoon className="text-black text-lg dark:text-white" />}
           </button>
 
           {/* Cart */}
@@ -197,9 +202,9 @@ const Navbar = () => {
               className="relative text-black dark:text-white hover:text-[#FF4500]"
               aria-label="Open cart"
             >
-              <FaShoppingCart className="h-7 w-7" />
+              <FaShoppingCart className="h-6 w-6" />
               {hasCartItems && (
-                <span className="absolute -top-2 -right-2 text-xs bg-[#FF4500] text-white px-2 py-0.5 rounded-full animate-bounce">
+                <span className="absolute -top-2 -right-2 text-[10px] bg-[#FF4500] text-white px-1.5 py-0.5 rounded-full animate-bounce">
                   {cartCount}
                 </span>
               )}
@@ -223,9 +228,9 @@ const Navbar = () => {
                 aria-label="Open notifications"
               >
                 <div className="relative">
-                  <FaBell className={`h-7 w-7 ${notificationCount > 0 ? 'text-[#FF4500] drop-shadow-lg' : ''}`} />
+                  <FaBell className={`h-6 w-6 ${notificationCount > 0 ? 'text-[#FF4500] drop-shadow-lg' : ''}`} />
                   {notificationCount > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs px-2 py-0.5 rounded-full animate-pulse shadow-lg font-semibold">
+                    <span className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-[10px] px-1.5 py-0.5 rounded-full animate-pulse shadow-lg font-semibold">
                       {notificationCount > 99 ? '99+' : notificationCount}
                     </span>
                   )}
@@ -253,7 +258,7 @@ const Navbar = () => {
               <>
                 <button
                   onClick={() => setIsUserDropdownOpen((v) => !v)}
-                  className="flex items-center gap-2 focus:outline-none"
+                  className="flex items-center gap-1.5 focus:outline-none"
                   aria-haspopup="true"
                   aria-expanded={isUserDropdownOpen}
                 >
@@ -261,17 +266,19 @@ const Navbar = () => {
                     <img
                       src={user.avatar}
                       alt="avatar"
-                      className="w-9 h-9 rounded-full border-2 border-[#FF4500] object-cover shadow"
+                      className="w-8 h-8 rounded-full border border-[#FF4500] object-cover shadow"
                     />
                   ) : (
-                    <FaUserCircle className="w-9 h-9 text-black dark:text-white" />
+                    <FaUserCircle className="w-8 h-8 text-black dark:text-white" />
                   )}
                   <FaCaretDown className="text-black dark:text-white" />
                 </button>
                 {isUserDropdownOpen && (
-                  <div className="absolute right-0 mt-3 w-56 bg-white/95 dark:bg-[#0a192f]/95 backdrop-blur-lg rounded-xl shadow-2xl py-2 z-50 border border-white/40 animate-fade-in-down">
+                  <div className="absolute right-0 mt-2 w-56 bg-white/95 dark:bg-[#0a192f]/95 backdrop-blur-lg rounded-xl shadow-2xl py-2 z-50 border border-white/40 animate-fade-in-down">
                     <NavLink to="/profile" className="block px-4 py-2 text-base hover:bg-[#FF4500]/10 dark:hover:bg-[#FF4500]/20 rounded-lg transition">Profile</NavLink>
                     <NavLink to="/my-registrations" className="block px-4 py-2 text-base hover:bg-[#FF4500]/10 dark:hover:bg-[#FF4500]/20 rounded-lg transition">My Registrations</NavLink>
+                    <NavLink to={bookTicketPath} className="block px-4 py-2 text-base hover:bg-[#FF4500]/10 dark:hover:bg-[#FF4500]/20 rounded-lg transition">Book Ticket</NavLink>
+                    <NavLink to="/TripRequestForm" className="block px-4 py-2 text-base hover:bg-[#FF4500]/10 dark:hover:bg-[#FF4500]/20 rounded-lg transition">Create Trip</NavLink>
                     {user.role === "admin" && (
                       <NavLink to="/admin/dashboard" className="block px-4 py-2 text-base hover:bg-[#FF4500]/10 dark:hover:bg-[#FF4500]/20 rounded-lg transition">Dashboard</NavLink>
                     )}
@@ -336,6 +343,8 @@ const Navbar = () => {
             <>
               <NavLink to="/profile" className="block py-3 text-lg rounded-full transition font-semibold px-4 bg-white text-black border-2 border-[#FF4500] shadow-md dark:bg-[#0a192f] dark:text-white" onClick={() => setIsMenuOpen(false)}>Profile</NavLink>
               <NavLink to="/my-registrations" className="block py-3 text-lg rounded-full transition font-semibold px-4 bg-white text-black border-2 border-[#FF4500] shadow-md dark:bg-[#0a192f] dark:text-white" onClick={() => setIsMenuOpen(false)}>My Registrations</NavLink>
+              <NavLink to={bookTicketPath} className="block py-3 text-lg rounded-full transition font-semibold px-4 bg-white text-black border-2 border-[#FF4500] shadow-md dark:bg-[#0a192f] dark:text-white" onClick={() => setIsMenuOpen(false)}>Book Ticket</NavLink>
+              <NavLink to="/TripRequestForm" className="block py-3 text-lg rounded-full transition font-semibold px-4 bg-white text-black border-2 border-[#FF4500] shadow-md dark:bg-[#0a192f] dark:text-white" onClick={() => setIsMenuOpen(false)}>Create Trip</NavLink>
               <button 
                 onClick={() => { setIsNotificationOpen(true); setIsMenuOpen(false); }}
                 className="block w-full text-left py-3 text-lg rounded-full transition font-semibold px-4 bg-white text-black border-2 border-[#FF4500] shadow-md dark:bg-[#0a192f] dark:text-white"

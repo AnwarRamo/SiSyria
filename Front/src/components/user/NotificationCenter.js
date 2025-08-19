@@ -23,6 +23,8 @@ const NotificationItem = ({ notification, onMarkAsRead, onViewTrip }) => {
     trip_rejected: <FaTimesCircle className="w-5 h-5 text-red-500" />,
     trip_reminder: <FaClock className="w-5 h-5 text-blue-500" />,
     trip_cancelled: <FaExclamationTriangle className="w-5 h-5 text-orange-500" />,
+    event_approved: <FaCheckCircle className="w-5 h-5 text-green-500" />,
+    event_rejected: <FaTimesCircle className="w-5 h-5 text-red-500" />,
     default: <FaBell className="w-5 h-5 text-gray-500" />,
   };
 
@@ -31,6 +33,8 @@ const NotificationItem = ({ notification, onMarkAsRead, onViewTrip }) => {
     trip_rejected: 'border-red-200 bg-red-50',
     trip_reminder: 'border-blue-200 bg-blue-50',
     trip_cancelled: 'border-orange-200 bg-orange-50',
+    event_approved: 'border-green-200 bg-green-50',
+    event_rejected: 'border-red-200 bg-red-50',
     default: 'border-gray-200 bg-gray-50',
   };
 
@@ -285,7 +289,9 @@ const NotificationCenter = ({ isOpen, onClose, onViewTrip, onNotificationUpdate 
               { key: 'unread', label: 'Unread', activeClass: 'bg-red-500 text-white shadow-lg' },
               { key: 'trip_approved', label: 'Approved', activeClass: 'bg-green-500 text-white shadow-lg' },
               { key: 'trip_rejected', label: 'Rejected', activeClass: 'bg-orange-500 text-white shadow-lg' },
-              { key: 'trip_reminder', label: 'Reminders', activeClass: 'bg-purple-500 text-white shadow-lg' }
+              { key: 'trip_reminder', label: 'Reminders', activeClass: 'bg-purple-500 text-white shadow-lg' },
+              { key: 'event_approved', label: 'Event Approved', activeClass: 'bg-green-500 text-white shadow-lg' },
+              { key: 'event_rejected', label: 'Event Rejected', activeClass: 'bg-orange-500 text-white shadow-lg' }
             ].map(({ key, label, activeClass }) => {
               const isActive = filter === key;
               const buttonClass = isActive 

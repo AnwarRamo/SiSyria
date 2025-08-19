@@ -122,7 +122,8 @@ export const AdminService = {
   // All Bookings
   getAllBookings: async (signal) => {
     return handleRequest(() =>
-      apiClient.get(`${ENDPOINTS.ORDERS.BASE}`, { signal, withCredentials: true })
+      // Fetch all trip registrations for admin dashboard
+      apiClient.get(`/api/admin/register`, { signal, withCredentials: true })
     );
   },
 
@@ -295,5 +296,21 @@ export const AdminService = {
     return handleRequest(() =>
       apiClient.delete(`${ENDPOINTS.ADMIN.BASE}/appointments/${appointmentId}`, { withCredentials: true })
     );
-  }
+  },
+
+  // Event Requests
+  getEventRequests: async () => {
+    return handleRequest(() => apiClient.get('/api/events/bookings', { withCredentials: true }));
+  },
+  updateEventRequest: async (id, updates) => {
+    return handleRequest(() => apiClient.patch(`/api/events/bookings/${id}`, updates, { withCredentials: true }));
+  },
+
+  // Organized Events
+  listOrganizedEvents: async () => {
+    return handleRequest(() => apiClient.get('/api/events/organized', { withCredentials: true }));
+  },
+  createOrganizedEvent: async (payload) => {
+    return handleRequest(() => apiClient.post('/api/events/organized', payload, { withCredentials: true }));
+  },
 };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FaMapMarkerAlt, FaSpinner, FaExclamationTriangle, FaChevronLeft, FaChevronRight, FaStar, FaRegClock } from 'react-icons/fa';
+import { FaMapMarkerAlt, FaSpinner, FaExclamationTriangle, FaChevronLeft, FaChevronRight, FaStar, FaRegClock, FaHeart, FaUserFriends } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import { toast } from 'react-toastify';
 import { shallow } from 'zustand/shallow';
@@ -59,87 +59,62 @@ const TripCard = ({ trip, isRegistered, isLoading, onToggleRegister, onViewDetai
       ref={cardRef}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      className="relative bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border-2 border-[#E7C873] flex flex-col overflow-hidden group transition-transform duration-300"
-      style={{ transformStyle: 'preserve-3d' }}
-      initial={{ opacity: 0, y: 30, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      whileHover={{ boxShadow: '0 12px 32px 0 rgba(231,200,115,0.25)' }}
-      transition={{ duration: 0.4, type: 'spring', stiffness: 120 }}
+      className="relative bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
     >
-      {/* Featured badge */}
       {trip.featured && (
-        <div className="absolute top-4 left-4 bg-[#E7C873] text-[#115d5a] px-3 py-1 rounded-full text-xs font-bold flex items-center z-10 shadow">
-          <FaStar className="mr-1" /> Featured
+        <div className="absolute top-4 left-4 bg-[#E7C873] text-[#115d5a] px-3 py-1 rounded-full text-xs font-bold z-10">
+          <span className="mr-1">★</span> Featured
         </div>
       )}
-      {/* Trip image */}
-      {firstImage ? (
-        <img
-          src={firstImage}
-          alt={trip.title}
-          className="w-full h-56 object-cover object-center transition-transform duration-500 group-hover:scale-105"
-          loading="lazy"
-        />
-      ) : (
-        <div className="w-full h-56 bg-gradient-to-r from-[#115d5a] to-[#E7C873] flex items-center justify-center">
-          <span className="text-white font-bold">No image available</span>
+      <button
+        type="button"
+        className="absolute top-4 right-4 z-10 bg-white/90 backdrop-blur-sm w-9 h-9 rounded-full flex items-center justify-center text-emerald-700 shadow"
+        aria-label="Save trip"
+      >
+        <FaHeart />
+      </button>
+
+      <div className="relative">
+        {firstImage ? (
+          <img src={firstImage} alt={trip.title} className="w-full h-48 object-cover" loading="lazy" />
+        ) : (
+          <div className="w-full h-48 bg-gray-100 flex items-center justify-center text-gray-500">No image</div>
+        )}
+        <div className="absolute bottom-3 left-4 text-white text-lg font-semibold drop-shadow">
+          {trip.title}
         </div>
-      )}
-      {/* Card content */}
-      <div className="p-6 flex flex-col flex-grow">
-        <div className="flex justify-between items-center mb-2">
-          <h3 className="text-2xl font-extrabold text-[#115d5a] truncate">{trip.title}</h3>
-          <div className="bg-[#E7C873] text-[#115d5a] px-4 py-1 rounded-full text-base font-bold shadow">
-            ${trip.price}
-          </div>
-        </div>
-        <div className="flex items-center gap-3 mb-2 text-sm text-[#115d5a] font-medium">
-          <FaMapMarkerAlt className="inline mr-1" />
-          <span>{trip.destination}</span>
-          <FaRegClock className="inline ml-3 mr-1" />
-          <span>{trip.startDate ? new Date(trip.startDate).toLocaleString() : 'TBA'}</span>
-          <FaRegClock className="inline ml-3 mr-1" />
-          <span>{trip.days} days</span>
-        </div>
-        {/* Countdown Timer */}
-        {trip.startDate && <CountdownTimer startDate={trip.startDate} />}
-        <p className="text-gray-700 text-sm mb-3 line-clamp-3 flex-grow">
-          {trip.description || 'No description available'}
+      </div>
+
+      <div className="p-6">
+        <p className="text-sm text-gray-600 mb-4">
+          {trip.description?.slice(0, 120) || 'Intimate celebrations tailored to your personal style'}
         </p>
-        <div className="flex flex-wrap gap-2 mb-4">
-          {(trip.highlights || []).slice(0, 4).map((highlight, idx) => (
-            <span key={idx} className="bg-[#115d5a]/10 text-[#115d5a] px-3 py-1 rounded-full text-xs font-semibold border border-[#E7C873]">
-              {highlight}
-            </span>
-          ))}
+
+        <div className="mb-2 text-sm font-semibold text-gray-800">Services Include:</div>
+        <div className="grid grid-cols-2 gap-y-2 text-sm text-gray-700 mb-5">
+          {(trip.highlights && trip.highlights.length ? trip.highlights : [trip.destination, `${trip.duration || trip.days || 0} days`, 'Guided tours', 'Transportation'])
+            .slice(0, 4)
+            .map((item, idx) => (
+              <div key={idx} className="flex items-start">
+                <span className="mt-1 mr-2 text-amber-600">•</span>
+                <span className="leading-5">{item}</span>
+              </div>
+            ))}
         </div>
-        <div className="mt-auto flex flex-col gap-3">
+
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-xs uppercase text-gray-500">Pricing</div>
+            <div className="text-[#115d5a] font-semibold">Starting from ${Number(trip.price || 0).toLocaleString()}</div>
+          </div>
           <button
             onClick={() => onViewDetails(trip._id)}
-            className="w-full py-2 px-4 rounded-xl text-white font-bold bg-[#115d5a] hover:bg-[#0d4a47] transition-all duration-300 shadow-md"
+            className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-4 py-2 rounded-lg"
           >
-            View Details
-          </button>
-          <button
-            disabled={isLoading || isFull}
-            onClick={() => onToggleRegister(trip._id)}
-            className={`w-full py-2 px-4 rounded-xl font-bold transition-all duration-300 shadow-md
-              ${isLoading || isFull
-                ? 'bg-gray-400 text-white cursor-not-allowed'
-                : isRegistered
-                ? 'bg-[#E7C873] text-[#115d5a] hover:bg-yellow-400'
-                : 'bg-gradient-to-r from-[#115d5a] to-[#1a7c78] text-white hover:from-[#0d4a47] hover:to-[#115d5a]'}
-            `}
-          >
-            {isLoading ? (
-              <span className="animate-spin inline-block mr-2 align-middle">⏳</span>
-            ) : isFull ? (
-              'Trip is Full'
-            ) : isRegistered ? (
-              '✓ Registered'
-            ) : (
-              'Register Now'
-            )}
+            <FaUserFriends /> Book Now
           </button>
         </div>
       </div>

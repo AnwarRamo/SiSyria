@@ -3,7 +3,7 @@ import AppRoutes from './routes';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useAuthStore } from './api/stores/auth.store';
-import Mascot from './components/ui/Mascot';
+// Mascot removed per requirements
 
 const App = () => {
   const hydrate = useAuthStore(state => state.hydrate);
@@ -31,7 +31,6 @@ const App = () => {
     console.log('🚀 Bypassing auth loading for testing');
     return (
       <>
-        <Mascot />
         <ToastContainer position="bottom-right" autoClose={3000} />
         <AppRoutes />
       </>
@@ -61,7 +60,6 @@ const App = () => {
 
   return (
     <>
-      <Mascot />
       <ToastContainer position="bottom-right" autoClose={3000} />
       <AppRoutes />
     </>

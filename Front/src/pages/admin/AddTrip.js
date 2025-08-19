@@ -29,6 +29,20 @@ function AddTrip() {
         capacity: "",
         startDate: new Date().toISOString().split("T")[0],
         days: 1,
+        // Ticket/Plane System Fields
+        includeFlights: true,
+        departureCity: "",
+        arrivalCity: "",
+        departureAirport: "",
+        arrivalAirport: "",
+        departureTime: "",
+        returnTime: "",
+        airline: "",
+        flightNumber: "",
+        returnFlightNumber: "",
+        seatClasses: ["Economy"],
+        ticketPrice: "",
+        availableSeats: ""
     });
 
     const [mainImages, setMainImages] = useState([]); // This will hold File objects
@@ -259,6 +273,119 @@ function AddTrip() {
                                 </ul>
                             )}
                         </div>
+                    </div>
+                </div>
+
+                {/* --- Section 2.5: Flight Information --- */}
+                <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+                    <h2 className="text-2xl font-semibold text-gray-800 mb-6 border-b pb-3">Flight Information</h2>
+                    <div className="space-y-6">
+                        <div className="flex items-center">
+                            <input
+                                id="includeFlights"
+                                name="includeFlights"
+                                type="checkbox"
+                                checked={formData.includeFlights}
+                                onChange={(e) => setFormData(prev => ({ ...prev, includeFlights: e.target.checked }))}
+                                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                            />
+                            <label htmlFor="includeFlights" className="ml-2 block text-sm text-gray-900">
+                                Include flights in this trip
+                            </label>
+                        </div>
+
+                        {formData.includeFlights && (
+                            <>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label htmlFor="departureCity" className="block text-sm font-medium text-gray-700 mb-1">Departure City</label>
+                                        <input id="departureCity" name="departureCity" type="text" value={formData.departureCity} onChange={handleFormChange} className="w-full p-3 border border-gray-300 rounded-md" />
+                                    </div>
+                                    <div>
+                                        <label htmlFor="arrivalCity" className="block text-sm font-medium text-gray-700 mb-1">Arrival City</label>
+                                        <input id="arrivalCity" name="arrivalCity" type="text" value={formData.arrivalCity} onChange={handleFormChange} className="w-full p-3 border border-gray-300 rounded-md" />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label htmlFor="departureAirport" className="block text-sm font-medium text-gray-700 mb-1">Departure Airport</label>
+                                        <input id="departureAirport" name="departureAirport" type="text" value={formData.departureAirport} onChange={handleFormChange} className="w-full p-3 border border-gray-300 rounded-md" />
+                                    </div>
+                                    <div>
+                                        <label htmlFor="arrivalAirport" className="block text-sm font-medium text-gray-700 mb-1">Arrival Airport</label>
+                                        <input id="arrivalAirport" name="arrivalAirport" type="text" value={formData.arrivalAirport} onChange={handleFormChange} className="w-full p-3 border border-gray-300 rounded-md" />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label htmlFor="departureTime" className="block text-sm font-medium text-gray-700 mb-1">Departure Time</label>
+                                        <input id="departureTime" name="departureTime" type="datetime-local" value={formData.departureTime} onChange={handleFormChange} className="w-full p-3 border border-gray-300 rounded-md" />
+                                    </div>
+                                    <div>
+                                        <label htmlFor="returnTime" className="block text-sm font-medium text-gray-700 mb-1">Return Time</label>
+                                        <input id="returnTime" name="returnTime" type="datetime-local" value={formData.returnTime} onChange={handleFormChange} className="w-full p-3 border border-gray-300 rounded-md" />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label htmlFor="airline" className="block text-sm font-medium text-gray-700 mb-1">Airline</label>
+                                        <input id="airline" name="airline" type="text" value={formData.airline} onChange={handleFormChange} className="w-full p-3 border border-gray-300 rounded-md" />
+                                    </div>
+                                    <div>
+                                        <label htmlFor="flightNumber" className="block text-sm font-medium text-gray-700 mb-1">Flight Number</label>
+                                        <input id="flightNumber" name="flightNumber" type="text" value={formData.flightNumber} onChange={handleFormChange} className="w-full p-3 border border-gray-300 rounded-md" />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label htmlFor="returnFlightNumber" className="block text-sm font-medium text-gray-700 mb-1">Return Flight Number (Optional)</label>
+                                    <input id="returnFlightNumber" name="returnFlightNumber" type="text" value={formData.returnFlightNumber} onChange={handleFormChange} className="w-full p-3 border border-gray-300 rounded-md" />
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label htmlFor="ticketPrice" className="block text-sm font-medium text-gray-700 mb-1">Ticket Price ($)</label>
+                                        <input id="ticketPrice" name="ticketPrice" type="number" value={formData.ticketPrice} onChange={handleFormChange} className="w-full p-3 border border-gray-300 rounded-md" />
+                                    </div>
+                                    <div>
+                                        <label htmlFor="availableSeats" className="block text-sm font-medium text-gray-700 mb-1">Available Seats</label>
+                                        <input id="availableSeats" name="availableSeats" type="number" value={formData.availableSeats} onChange={handleFormChange} className="w-full p-3 border border-gray-300 rounded-md" />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Seat Classes</label>
+                                    <div className="space-y-2">
+                                        {['Economy', 'Business', 'First'].map(seatClass => (
+                                            <label key={seatClass} className="flex items-center">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={formData.seatClasses.includes(seatClass)}
+                                                    onChange={(e) => {
+                                                        if (e.target.checked) {
+                                                            setFormData(prev => ({
+                                                                ...prev,
+                                                                seatClasses: [...prev.seatClasses, seatClass]
+                                                            }));
+                                                        } else {
+                                                            setFormData(prev => ({
+                                                                ...prev,
+                                                                seatClasses: prev.seatClasses.filter(c => c !== seatClass)
+                                                            }));
+                                                        }
+                                                    }}
+                                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                                />
+                                                <span className="ml-2 text-sm text-gray-900">{seatClass}</span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
                 

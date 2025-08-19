@@ -22,6 +22,9 @@ function Sidebar({ user }) {
     { to: "/admin/dashboard", icon: <FaTachometerAlt />, label: "Dashboard", adminOnly: true },
     { to: "/admin/trips", icon: <FaSuitcase />, label: "Manage Trips", adminOnly: true },
     { to: "/admin/registrations", icon: <FaClipboardList />, label: "Registrations", adminOnly: true },
+    { to: "/admin/tickets", icon: <FaClipboardList />, label: "Tickets", adminOnly: true },
+    { to: "/admin/event-requests", icon: <FaClipboardList />, label: "Event Requests", adminOnly: true },
+    { to: "/admin/organized-events", icon: <FaClipboardList />, label: "Organized Events", adminOnly: true },
     { to: "/admin/users", icon: <FaUsers />, label: "User Management", adminOnly: true },
     { to: "/admin/add-trip", icon: <FaArrowAltCircleRight />, label: "Create Trip", adminOnly: true },
   ];

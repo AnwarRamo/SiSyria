@@ -10,13 +10,13 @@ import LoadingSpinner from "../components/LodingSpinner";
 import { useAuthStore } from "../api/stores/auth.store";
 
 // Public/User Pages
-import { Home, Login, Register,ContactUs, AboutUs, Travel, Souvenirs,TripeDeatiles } from "../pages/public";
-import { TripRequestForm,Profile } from "../pages/user";
+import { Home, Login, Register,ContactUs, AboutUs, Travel, Souvenirs,TripeDeatiles, Events } from "../pages/public";
+import { TripRequestForm,Profile, TicketBookingPage, SelectTripToBook } from "../pages/user";
 import CartPage from "../pages/user/CartPage";
 import MyRegistrations from "../pages/user/MyRegistrations";
 
 // Admin Pages
-import { Dashboard, ManageTrips, UserManagement, AddTrip } from "../pages/admin";
+import { Dashboard, ManageTrips, UserManagement, AddTrip, TicketsReview, EventRequests, OrganizedEvents } from "../pages/admin";
 import TripDaysDetails from "../pages/admin/TripDaysDetails";
 import RegistrationDashboard from "../pages/admin/RegistrationDashboard";
 
@@ -31,6 +31,7 @@ const publicRoutes = [
   { path: "/cart", element: <CartPage /> },
     { path: "/travel", element: <Travel /> },
   { path: "/souvenirs", element: <Souvenirs /> },
+  { path: "/events", element: <Events /> },
     { path: "/trips/:tripId", element: <TripeDeatiles /> }, 
 ];
 
@@ -39,6 +40,8 @@ const protectedRoutes = [
   { path: "/profile", element: <Profile /> },
   { path: "/TripRequestForm", element: <TripRequestForm /> },
   { path: "/my-registrations", element: <MyRegistrations /> },
+  { path: "/book-ticket/:tripId", element: <TicketBookingPage /> },
+  { path: "/book-ticket", element: <SelectTripToBook /> },
 ];
 
 const AppRoutes = () => {
@@ -76,6 +79,9 @@ const AppRoutes = () => {
           <Route path="users" element={<UserManagement />} />
           <Route path="add-trip" element={<AddTrip />} />
           <Route path="registrations" element={<RegistrationDashboard />} />
+          <Route path="tickets" element={<TicketsReview />} />
+          <Route path="event-requests" element={<EventRequests />} />
+          <Route path="organized-events" element={<OrganizedEvents />} />
         </Route>
       </Route>
 
